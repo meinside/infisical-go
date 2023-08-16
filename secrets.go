@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // RetrieveSecrets retrieves secrets for given parameters.
@@ -63,6 +64,23 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 	}
 
 	return SecretsData{}, fmt.Errorf("failed to retrieve secrets: %s", err)
+}
+
+// RetrieveSecretsAtPath retrieves all secrets at given path.
+//
+// Just a helper function for `RetrieveSecrets`.
+//
+// `secretPath` is in form of: "/folder1/folder2/..."
+func (c *Client) RetrieveSecretsAtPath(secretPath, workspaceID, environment string) (secrets []Secret, err error) {
+	params := NewParamsRetrieveSecrets().
+		SetSecretPath(secretPath)
+
+	var retrieved SecretsData
+	if retrieved, err = c.RetrieveSecrets(workspaceID, environment, params); err == nil {
+		return retrieved.Secrets, nil
+	}
+
+	return nil, fmt.Errorf("failed to retrieve secrets at secret path '%s': %s", secretPath, err)
 }
 
 // CreateSecret creates a secret with given parameters.
@@ -193,6 +211,29 @@ func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, para
 	}
 
 	return SecretData{}, fmt.Errorf("failed to retrieve secret: %s", err)
+}
+
+// RetrieveSecretValue retrieves a secret value for given path + key.
+//
+// Just a helper function for `RetrieveSecret`.
+//
+// `secretKeyWithPath` is in form of: "/folder1/folder2/.../secret_key_name"
+func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment string, secretType SecretType) (value string, err error) {
+	// secretKeyWithPath => secretKey + secretPath
+	splitted := strings.Split(secretKeyWithPath, "/")
+	secretKey := splitted[len(splitted)-1]
+	secretPath := strings.TrimSuffix(secretKeyWithPath, secretKey)
+
+	params := NewParamsRetrieveSecret().
+		SetSecretPath(secretPath).
+		SetType(secretType)
+
+	var retrieved SecretData
+	if retrieved, err = c.RetrieveSecret(secretKey, workspaceID, environment, params); err == nil {
+		return retrieved.Secret.SecretValue, nil
+	}
+
+	return "", fmt.Errorf("failed to retrieve secret value for key path '%s': %s", secretKeyWithPath, err)
 }
 
 // UpdateSecret updates a secret with given parameters.
