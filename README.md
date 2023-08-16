@@ -15,28 +15,56 @@ import (
 
 // NOTE: put yours here
 const (
+	// authentication
 	apiKey      = "ak.1234567890.abcdefghijk"
 	token       = "st.xyzwabcd.0987654321.abcdefghijklmnop"
-	workspaceID = "012345abcdefg"
-	environment = "dev"
 	e2eeEnabled = true
 
-	verbose = true
+	// workspace & environment
+	workspaceID = "012345abcdefg"
+	environment = "dev"
+
+	keyPath    = "/folder1/folder2"
+	secretType = infisical.SecretTypeShared
+
+	//verbose = true // => for dumping HTTP requests & responses
+	verbose = false
 )
 
 func main() {
+	// create a client,
 	client := infisical.NewClient().
 		SetAPIKey(apiKey).
 		SetToken(token).
 		SetE2EEEnabled(e2eeEnabled)
 	client.Verbose = verbose
 
-	if secrets, err := client.RetrieveSecrets(workspaceID, environment, nil); err == nil {
-		log.Printf("retrieved secrets = %+v", secrets)
+	// fetch all secrets at a path,
+	if secrets, err := client.RetrieveSecretsAtPath(keyPath, workspaceID, environment); err == nil {
+		log.Printf("retrieved %d secret(s) at path '%s'", len(secrets), keyPath)
+
+		for _, secret := range secrets {
+			// fetch a value directly with path + key
+			key := keyPath + "/" + secret.SecretKey
+
+			if value, err := client.RetrieveSecretValue(key, workspaceID, environment, secret.Type); err == nil {
+				log.Printf("retrieved value for secret key '%s' = '%s'", key, value)
+			} else {
+				panic(err)
+			}
+		}
 	} else {
 		panic(err)
 	}
 }
+```
+
+Output:
+
+```
+2023/08/16 14:30:33 retrieved 2 secret(s) at path '/folder1/folder2'
+2023/08/16 14:30:34 retrieved value for secret key '/folder1/folder2/KEY_A' = 'value A'
+2023/08/16 14:30:36 retrieved value for secret key '/folder1/folder2/KEY_B' = 'value B'
 ```
 
 ## Implemented
