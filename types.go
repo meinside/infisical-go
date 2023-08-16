@@ -178,10 +178,13 @@ type ProjectsData struct {
 
 // Workspace struct for project
 type Workspace struct {
+	ID           string `json:"_id"`
 	Name         string `json:"name"`
 	Organization string `json:"organization"`
 	Environments []struct {
+		ID   string `json:"_id"`
 		Name string `json:"name"`
 		Slug string `json:"slug"`
 	} `json:"environments"`
+	AutoCapitalization bool `json:"autoCapitalization"`
 }
