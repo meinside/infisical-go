@@ -12,7 +12,7 @@ import (
 // https://infisical.com/docs/api-reference/endpoints/service-tokens/get
 func (c *Client) RetrieveServiceToken() (result ServiceToken, err error) {
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", "/v2/service-token/", AuthMethodAPIKey|AuthMethodToken, nil)
+	req, err = c.newRequestWithQueryParams("GET", "/v2/service-token/", AuthMethodNormal, nil)
 	if err == nil {
 		c.dumpRequest(req)
 

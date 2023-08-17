@@ -18,7 +18,6 @@ const (
 	// authentication
 	apiKey      = "ak.1234567890.abcdefghijk"
 	token       = "st.xyzwabcd.0987654321.abcdefghijklmnop"
-	e2eeEnabled = true
 
 	// workspace & environment
 	workspaceID = "012345abcdefg"
@@ -32,11 +31,8 @@ const (
 )
 
 func main() {
-	// create a client,
-	client := infisical.NewClient().
-		SetAPIKey(apiKey).
-		SetToken(token).
-		SetE2EEEnabled(e2eeEnabled)
+	// create a client, (NOTE: enable E2EE setting in your project)
+	client := infisical.NewE2EEEnabledClient(apiKey, token)
 	client.Verbose = verbose
 
 	// fetch all secrets at a path,

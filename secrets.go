@@ -28,7 +28,7 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodPreferToken, params)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodNormal, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -140,7 +140,7 @@ func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue s
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
+	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodNormal, params)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, para
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
+	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodAPIKeyOnly, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -224,16 +224,33 @@ func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment
 	secretKey := splitted[len(splitted)-1]
 	secretPath := strings.TrimSuffix(secretKeyWithPath, secretKey)
 
-	params := NewParamsRetrieveSecret().
-		SetSecretPath(secretPath).
-		SetType(secretType)
+	if c.apiKey != nil && len(*c.apiKey) > 0 {
+		params := NewParamsRetrieveSecret().
+			SetSecretPath(secretPath).
+			SetType(secretType)
 
-	var retrieved SecretData
-	if retrieved, err = c.RetrieveSecret(secretKey, workspaceID, environment, params); err == nil {
-		return retrieved.Secret.SecretValue, nil
+		var retrieved SecretData
+		if retrieved, err = c.RetrieveSecret(secretKey, workspaceID, environment, params); err == nil {
+			return retrieved.Secret.SecretValue, nil
+		}
+
+		return "", fmt.Errorf("failed to retrieve secret value for key path '%s': %s", secretKeyWithPath, err)
+	} else {
+		// FIXME: when E2EE is disabled, `RetrieveSecret` may fail due to missing `api_key`, so use `RetrieveSecrets` instead
+
+		params := NewParamsRetrieveSecrets().SetSecretPath(secretPath)
+
+		var retrieved SecretsData
+		if retrieved, err = c.RetrieveSecrets(workspaceID, environment, params); err == nil {
+			for _, secret := range retrieved.Secrets {
+				if secret.SecretKey == secretKey && secret.Environment == environment && secret.Type == secretType {
+					return secret.SecretValue, nil
+				}
+			}
+		}
+
+		return "", fmt.Errorf("failed to retrieve secret value for key path '%s': no matching secret in the result of `RetrieveSecrets`", secretKeyWithPath)
 	}
-
-	return "", fmt.Errorf("failed to retrieve secret value for key path '%s': %s", secretKeyWithPath, err)
 }
 
 // UpdateSecret updates a secret with given parameters.
@@ -287,7 +304,7 @@ func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue s
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
+	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodNormal, params)
 	if err != nil {
 		return err
 	}
@@ -322,7 +339,7 @@ func (c *Client) DeleteSecret(secretKey, workspaceID, environment string, params
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
+	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodNormal, params)
 	if err == nil {
 		c.dumpRequest(req)
 

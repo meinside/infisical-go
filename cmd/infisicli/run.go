@@ -54,7 +54,7 @@ const (
 
 // config struct
 type config struct {
-	APIKey      string `json:"api_key"`
+	APIKey      string `json:"api_key,omitempty"`
 	Token       string `json:"token"`
 	E2EEEnabled bool   `json:"e2ee_enabled"`
 }
@@ -114,29 +114,42 @@ func showHelp(err error) {
 	fmt.Printf(`
 Usage:
 
-	%[1]s %[2]s / %[3]s : print this help message to stdout.
+	%[1]s %[2]s
+	%[1]s %[3]s
+	: print this help message to stdout.
 
-	%[1]s %[4]s / %[5]s : print the version string to stdout.
+	%[1]s %[4]s
+	%[1]s %[5]s
+	: print the version string to stdout.
 
-	%[1]s %[6]s / %[7]s : list all your organizations to stdout.
+	%[1]s %[6]s
+	%[1]s %[7]s
+	: list all your organizations to stdout. (needed: 'api_key' and 'token')
 
-	%[1]s %[8]s / %[9]s : list all your workspaces to stdout.
+	%[1]s %[8]s
+	%[1]s %[9]s
+	: list all your workspaces to stdout. (needed: 'api_key' and 'token')
 		eg. %[1]s %[8]s %[14]s=0a1b2c3d4e5f
 		eg. %[1]s %[9]s %[15]s=0a1b2c3d4e5f
 
-	%[1]s %[10]s / %[11]s : list all (decrypted) secrets in a given folder (default: /) to stdout.	
+	%[1]s %[10]s
+	%[1]s %[11]s
+	: list all secret values in a given folder (default: /) to stdout. (only 'token' is needed when E2EE is disabled)
 		eg. %[1]s %[10]s %[18]s=012345abcdefg %[20]s=dev
 		eg. %[1]s %[11]s %[19]s=012345abcdefg %[21]s=dev
 		eg. %[1]s %[10]s %[18]s=012345abcdefg %[20]s=dev %[16]s=/folder1/folder2
 		eg. %[1]s %[11]s %[19]s=012345abcdefg %[21]s=dev %[17]s=/folder1/folder2
 
-	%[1]s %[12]s / %[13]s : print the (decrypted) secret value to stdout without a trailing newline.
+	%[1]s %[12]s
+	%[1]s %[13]s
+	: print the secret value to stdout without a trailing newline. (only 'token' is needed when E2EE is disabled)
 		eg. %[1]s %[12]s %[18]s=012345abcdefg %[20]s=dev %[22]s=shared %[24]s=/folder1/folder2/SECRET_KEY_1
 		eg. %[1]s %[13]s %[19]s=012345abcdefg %[21]s=dev %[23]s=shared %[25]s=/folder1/folder2/SECRET_KEY_1
 
 Other optional arguments:
 
-	%[26]s / %[27]s : dump http requests/responses for debugging.
+	%[26]s / %[27]s
+	: dump http requests/responses for debugging.
 `,
 		// executable name
 		applicationName,
@@ -229,12 +242,18 @@ func do(fn func(c *infisical.Client) error, verbose bool) error {
 	cfg, err := loadConfig()
 
 	if err == nil {
-		client := infisical.NewClient().
-			SetAPIKey(cfg.APIKey).
-			SetToken(cfg.Token).
-			SetE2EEEnabled(cfg.E2EEEnabled)
-
+		var client *infisical.Client
+		if cfg.E2EEEnabled {
+			client = infisical.NewE2EEEnabledClient(cfg.APIKey, cfg.Token)
+		} else {
+			client = infisical.NewE2EEDisabledClient(cfg.Token).SetAPIKey(cfg.APIKey)
+		}
 		client.Verbose = verbose
+
+		// NOTE: api key is optional
+		if cfg.APIKey != "" {
+			client.SetAPIKey(cfg.APIKey)
+		}
 
 		return fn(client)
 	}

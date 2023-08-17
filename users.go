@@ -11,10 +11,10 @@ import (
 //
 // https://infisical.com/docs/api-reference/endpoints/users/my-organizations
 func (c *Client) RetrieveOrganizations() (result OrganizationsData, err error) {
-	path := fmt.Sprintf("/v2/users/me/organizations")
+	path := "/v2/users/me/organizations"
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKey, nil)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKeyOnly, nil)
 	if err == nil {
 		c.dumpRequest(req)
 
