@@ -14,7 +14,7 @@ func (c *Client) RetrieveProjects(organizationID string) (result ProjectsData, e
 	path := fmt.Sprintf("/v2/organizations/%s/workspaces", organizationID)
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKey, nil)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKeyOnly, nil)
 	if err == nil {
 		c.dumpRequest(req)
 

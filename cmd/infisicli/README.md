@@ -24,11 +24,24 @@ Put a `config.json` file in `$XDG_CONFIG_HOME/infisicli/` directory with followi
   "e2ee_enabled": true
 }
 ```
-where `api_key` is your API key of Infisical account,
 
-`token` is your token of workspace,
+where `api_key` is the API key of your Infisical account,
+
+`token` is your token of desired workspace,
 
 and `e2ee_enabled` is whether you enabled your E2EE setting or not.
+
+
+**NOTE**: When your E2EE setting is off, you can omit the `api_key` value:
+
+```json
+{
+  "token": "st.xyzwabcd.0987654321.abcdefghijklmnop",
+  "e2ee_enabled": false
+}
+```
+
+but in this case some features that require `api_key` will not function.
 
 ## Usage
 

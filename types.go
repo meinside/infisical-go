@@ -1,5 +1,7 @@
 package infisical
 
+import "strings"
+
 // type aliases
 
 type ParamsRetrieveSecrets map[string]any
@@ -11,7 +13,7 @@ func NewParamsRetrieveSecrets() ParamsRetrieveSecrets {
 }
 
 func (p ParamsRetrieveSecrets) SetSecretPath(secretPath string) ParamsRetrieveSecrets {
-	p["secretPath"] = secretPath
+	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
 	return p
 }
 
@@ -30,7 +32,7 @@ func (p ParamsCreateSecret) SetSecretComment(secretComment string) ParamsCreateS
 }
 
 func (p ParamsCreateSecret) SetSecretPath(secretPath string) ParamsCreateSecret {
-	p["secretPath"] = secretPath
+	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
 	return p
 }
 
@@ -49,7 +51,7 @@ func NewParamsRetrieveSecret() ParamsRetrieveSecret {
 }
 
 func (p ParamsRetrieveSecret) SetSecretPath(secretPath string) ParamsRetrieveSecret {
-	p["secretPath"] = secretPath
+	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
 	return p
 }
 
@@ -68,7 +70,7 @@ func NewParamsUpdateSecret() ParamsUpdateSecret {
 }
 
 func (p ParamsUpdateSecret) SetSecretPath(secretPath string) ParamsUpdateSecret {
-	p["secretPath"] = secretPath
+	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
 	return p
 }
 
@@ -92,7 +94,7 @@ func NewParamsDeleteSecret() ParamsDeleteSecret {
 }
 
 func (p ParamsDeleteSecret) SetSecretPath(secretPath string) ParamsDeleteSecret {
-	p["secretPath"] = secretPath
+	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
 	return p
 }
 

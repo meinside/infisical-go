@@ -17,9 +17,9 @@ const (
 type AuthMethod int
 
 const (
-	AuthMethodAPIKey      AuthMethod = 1
-	AuthMethodToken       AuthMethod = 2
-	AuthMethodPreferToken AuthMethod = 9
+	AuthMethodNormal     AuthMethod = 0
+	AuthMethodAPIKeyOnly AuthMethod = 1 << iota
+	AuthMethodTokenOnly  AuthMethod = 1 << iota
 )
 
 // dump http request
@@ -45,7 +45,14 @@ func (c *Client) dumpResponse(req *http.Response) {
 }
 
 // newRequestWithQueryParams creates a new http request with query strings.
-func (c *Client) newRequestWithQueryParams(method, path string, auth AuthMethod, params map[string]any) (req *http.Request, err error) {
+func (c *Client) newRequestWithQueryParams(method, path string, authMethod AuthMethod, params map[string]any) (req *http.Request, err error) {
+	if authMethod&AuthMethodAPIKeyOnly != 0 && empty(c.apiKey) {
+		return nil, fmt.Errorf("%s %s requires `api_key` that is missing, cannot generate a request", method, path)
+	}
+	if authMethod&AuthMethodTokenOnly != 0 && empty(c.token) {
+		return nil, fmt.Errorf("%s %s requires `token` that is missing, cannot generate a request", method, path)
+	}
+
 	url := fmt.Sprintf("%s%s", APIBaseURL, path)
 
 	if req, err = http.NewRequest(method, url, nil); err == nil {
@@ -56,24 +63,31 @@ func (c *Client) newRequestWithQueryParams(method, path string, auth AuthMethod,
 		}
 		req.URL.RawQuery = q.Encode()
 
-		// add headers for authorization
 		token := c.token
 		apiKey := c.apiKey
-		if token == nil && apiKey == nil {
-			return nil, fmt.Errorf("api key and token are missing, cannot generate a request")
+
+		// add headers for authorization
+		if empty(token) && empty(apiKey) {
+			return nil, fmt.Errorf("both `api_key` and `token` are missing, cannot generate a request")
 		}
-		if auth&AuthMethodAPIKey > 0 {
-			if apiKey != nil {
+		if authMethod&AuthMethodAPIKeyOnly != 0 {
+			if !empty(apiKey) {
 				req.Header.Set("X-API-KEY", *apiKey)
 			} else {
-				return nil, fmt.Errorf("api key is missing, cannot generate a request")
+				return nil, fmt.Errorf("`api_key` is missing, cannot generate a request")
 			}
-		}
-		if auth&AuthMethodToken > 0 {
-			if token != nil {
+		} else if authMethod&AuthMethodTokenOnly != 0 {
+			if !empty(token) {
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
 			} else {
-				return nil, fmt.Errorf("token is missing, cannot generate a request")
+				return nil, fmt.Errorf("`token` is missing, cannot generate a request")
+			}
+		} else {
+			if !empty(apiKey) {
+				req.Header.Set("X-API-KEY", *apiKey)
+			}
+			if !empty(token) {
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
 			}
 		}
 	}
@@ -82,7 +96,14 @@ func (c *Client) newRequestWithQueryParams(method, path string, auth AuthMethod,
 }
 
 // newRequestWithJSONBody creates a new http request with JSON body.
-func (c *Client) newRequestWithJSONBody(method, path string, auth AuthMethod, params map[string]any) (req *http.Request, err error) {
+func (c *Client) newRequestWithJSONBody(method, path string, authMethod AuthMethod, params map[string]any) (req *http.Request, err error) {
+	if authMethod&AuthMethodAPIKeyOnly != 0 && empty(c.apiKey) {
+		return nil, fmt.Errorf("%s %s requires `api_key` that is missing, cannot generate a request", method, path)
+	}
+	if authMethod&AuthMethodTokenOnly != 0 && empty(c.token) {
+		return nil, fmt.Errorf("%s %s requires `token` that is missing, cannot generate a request", method, path)
+	}
+
 	var encoded []byte
 	encoded, err = json.Marshal(params)
 	if err != nil {
@@ -94,35 +115,42 @@ func (c *Client) newRequestWithJSONBody(method, path string, auth AuthMethod, pa
 	if req, err = http.NewRequest(method, url, bytes.NewReader(encoded)); err == nil {
 		req.Header.Set("Content-Type", "application/json")
 
-		// add headers for authorization
 		token := c.token
 		apiKey := c.apiKey
-		if token == nil && apiKey == nil {
-			return nil, fmt.Errorf("api key and token are missing, cannot generate a request")
+
+		// add headers for authorization
+		if empty(token) && empty(apiKey) {
+			return nil, fmt.Errorf("both `api_key` and `token` are missing, cannot generate a request")
 		}
-		if auth&AuthMethodPreferToken > 0 {
-			if token != nil {
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
-			} else if apiKey != nil {
+		if authMethod&AuthMethodAPIKeyOnly != 0 {
+			if !empty(apiKey) {
 				req.Header.Set("X-API-KEY", *apiKey)
+			} else {
+				return nil, fmt.Errorf("`api_key` is missing, cannot generate a request")
+			}
+		} else if authMethod&AuthMethodTokenOnly != 0 {
+			if !empty(token) {
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
+			} else {
+				return nil, fmt.Errorf("`token` is missing, cannot generate a request")
 			}
 		} else {
-			if auth&AuthMethodAPIKey > 0 {
-				if apiKey != nil {
-					req.Header.Set("X-API-KEY", *apiKey)
-				} else {
-					return nil, fmt.Errorf("api key is missing, cannot generate a request")
-				}
+			if !empty(apiKey) {
+				req.Header.Set("X-API-KEY", *apiKey)
 			}
-			if auth&AuthMethodToken > 0 {
-				if token != nil {
-					req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
-				} else {
-					return nil, fmt.Errorf("token is missing, cannot generate a request")
-				}
+			if !empty(token) {
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
 			}
 		}
 	}
 
 	return req, err
+}
+
+// checks if given string pointer is an empty string
+func empty(str *string) bool {
+	if str == nil || len(*str) == 0 {
+		return true
+	}
+	return false
 }

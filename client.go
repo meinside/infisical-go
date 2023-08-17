@@ -16,29 +16,33 @@ type Client struct {
 	Verbose bool // NOTE: set for dumping http requests & responses
 }
 
-// NewClient returns an empty client struct.
-func NewClient() *Client {
+// NewE2EEEnabledClient returns a client struct which is E2EE enabled.
+func NewE2EEEnabledClient(apiKey, token string) *Client {
 	return &Client{
+		apiKey:      &apiKey,
+		token:       &token,
+		e2eeEnabled: true,
+
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
 		},
 	}
 }
 
-// SetAPIKey sets the api key value of the client.
+// NewE2EEDisabledClient returns a client struct which is E2EE disabled.
+func NewE2EEDisabledClient(token string) *Client {
+	return &Client{
+		token:       &token,
+		e2eeEnabled: false,
+
+		httpClient: &http.Client{
+			Timeout: TimeoutSeconds * time.Second,
+		},
+	}
+}
+
+// SetAPIKey sets the `api_key` value of the client and returns it.
 func (c *Client) SetAPIKey(apiKey string) *Client {
 	c.apiKey = &apiKey
-	return c
-}
-
-// SetToken sets the token value of the client.
-func (c *Client) SetToken(token string) *Client {
-	c.token = &token
-	return c
-}
-
-// SetE2EEEnabled sets the e2eeEnabled value of the client.
-func (c *Client) SetE2EEEnabled(enabled bool) *Client {
-	c.e2eeEnabled = enabled
 	return c
 }

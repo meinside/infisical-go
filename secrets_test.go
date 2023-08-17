@@ -37,11 +37,11 @@ func TestSecrets(t *testing.T) {
 	if token == "" || apiKey == "" {
 		t.Fatalf("no environment variables: `INFISICAL_TOKEN` or `INFISICAL_API_KEY` were found.")
 	} else {
-		client = NewClient()
-
-		client.SetAPIKey(apiKey)
-		client.SetToken(token)
-		client.SetE2EEEnabled(e2eeEnabled)
+		if e2eeEnabled {
+			client = NewE2EEEnabledClient(apiKey, token)
+		} else {
+			client = NewE2EEDisabledClient(token).SetAPIKey(apiKey)
+		}
 	}
 	if workspaceID == "" {
 		t.Fatalf("no environment variable: `INFISICAL_WORKSPACE_ID` was found.")
