@@ -28,7 +28,7 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKey, params)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodPreferToken, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -140,7 +140,7 @@ func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue s
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodAPIKey, params)
+	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, para
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodAPIKey, params)
+	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -287,7 +287,7 @@ func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue s
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodAPIKey, params)
+	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
 	if err != nil {
 		return err
 	}
@@ -322,7 +322,7 @@ func (c *Client) DeleteSecret(secretKey, workspaceID, environment string, params
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodAPIKey, params)
+	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodPreferToken, params)
 	if err == nil {
 		c.dumpRequest(req)
 
