@@ -17,8 +17,9 @@ const (
 type AuthMethod int
 
 const (
-	AuthMethodAPIKey AuthMethod = 1
-	AuthMethodToken  AuthMethod = 2
+	AuthMethodAPIKey      AuthMethod = 1
+	AuthMethodToken       AuthMethod = 2
+	AuthMethodPreferToken AuthMethod = 9
 )
 
 // dump http request
@@ -99,18 +100,26 @@ func (c *Client) newRequestWithJSONBody(method, path string, auth AuthMethod, pa
 		if token == nil && apiKey == nil {
 			return nil, fmt.Errorf("api key and token are missing, cannot generate a request")
 		}
-		if auth&AuthMethodAPIKey > 0 {
-			if apiKey != nil {
-				req.Header.Set("X-API-KEY", *apiKey)
-			} else {
-				return nil, fmt.Errorf("api key is missing, cannot generate a request")
-			}
-		}
-		if auth&AuthMethodToken > 0 {
+		if auth&AuthMethodPreferToken > 0 {
 			if token != nil {
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
-			} else {
-				return nil, fmt.Errorf("token is missing, cannot generate a request")
+			} else if apiKey != nil {
+				req.Header.Set("X-API-KEY", *apiKey)
+			}
+		} else {
+			if auth&AuthMethodAPIKey > 0 {
+				if apiKey != nil {
+					req.Header.Set("X-API-KEY", *apiKey)
+				} else {
+					return nil, fmt.Errorf("api key is missing, cannot generate a request")
+				}
+			}
+			if auth&AuthMethodToken > 0 {
+				if token != nil {
+					req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
+				} else {
+					return nil, fmt.Errorf("token is missing, cannot generate a request")
+				}
 			}
 		}
 	}
