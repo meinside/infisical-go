@@ -119,6 +119,10 @@ run test:
 $ go test
 ```
 
+## CLI
+
+I built a [CLI](https://github.com/meinside/infisical-go/tree/master/cmd/infisicli) for testing and personal use.
+
 ## License
 
 MIT
