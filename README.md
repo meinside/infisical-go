@@ -108,10 +108,10 @@ With some environment variables:
 
 ```bash
 export INFISICAL_API_KEY=ak.1234567890.abcdefghijk
-export INFISICAL_TOKEN=st.xyzwabcd.0987654321.abcdefghijklmnop
 export INFISICAL_WORKSPACE_ID=012345abcdefg
-#export INFISICAL_ENVIRONMENT=dev
-#export INFISICAL_E2EE=enabled
+export INFISICAL_TOKEN=st.xyzwabcd.0987654321.abcdefghijklmnop
+export INFISICAL_E2EE=enabled
+export INFISICAL_ENVIRONMENT=dev
 #export VERBOSE=true
 ```
 
