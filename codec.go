@@ -87,8 +87,8 @@ func (c *Client) projectKey() (projectKey []byte, err error) {
 		return nil, err
 	}
 
-	if c.token == nil {
-		return nil, fmt.Errorf("token is missing, cannot decrypt project key")
+	if empty(c.token) {
+		return nil, fmt.Errorf("`token` is missing, cannot decrypt project key")
 	}
 
 	splittedToken := strings.Split(*c.token, ".")
