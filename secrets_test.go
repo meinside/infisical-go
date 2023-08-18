@@ -17,36 +17,25 @@ const (
 func TestSecrets(t *testing.T) {
 	////////////////////////////////
 	// read values from environment variables
-	var token, apiKey, e2ee, workspaceID, env, verbose string
-	token = os.Getenv("INFISICAL_TOKEN")
-	apiKey = os.Getenv("INFISICAL_API_KEY")
-	e2ee = os.Getenv("INFISICAL_E2EE") // NOTE: "enabled" or not
-	workspaceID = os.Getenv("INFISICAL_WORKSPACE_ID")
-	env = os.Getenv("INFISICAL_ENVIRONMENT") // NOTE: default: "dev"
-	verbose = os.Getenv("VERBOSE")           // NOTE: "true" or not
-	var e2eeEnabled = (e2ee == "enabled")
-	var environment = "dev"
-	if env != "" {
-		environment = env
-	}
-	var isVerbose = (verbose == "true")
+	apiKey := os.Getenv("INFISICAL_API_KEY")
+	workspaceID := os.Getenv("INFISICAL_WORKSPACE_ID")
+	token := os.Getenv("INFISICAL_TOKEN")
+	e2ee := os.Getenv("INFISICAL_E2EE") // NOTE: "enabled" or not
+	environment := os.Getenv("INFISICAL_ENVIRONMENT")
+	verbose := os.Getenv("VERBOSE") // NOTE: "true" or not
 
 	////////////////////////////////
 	// initialize client
-	var client *Client
-	if token == "" || apiKey == "" {
-		t.Fatalf("no environment variables: `INFISICAL_TOKEN` or `INFISICAL_API_KEY` were found.")
-	} else {
-		if e2eeEnabled {
-			client = NewE2EEEnabledClient(apiKey, token)
-		} else {
-			client = NewE2EEDisabledClient(token).SetAPIKey(apiKey)
-		}
+	if apiKey == "" || token == "" || workspaceID == "" || environment == "" {
+		t.Fatalf("no environment variables: `INFISICAL_API_KEY`, `INFISICAL_TOKEN`, `INFISICAL_WORKSPACE_ID`, or `INFISICAL_ENVIRONMENT` were found.")
 	}
-	if workspaceID == "" {
-		t.Fatalf("no environment variable: `INFISICAL_WORKSPACE_ID` was found.")
-	}
-	client.Verbose = isVerbose
+	client := NewClient(apiKey, map[string]WorkspaceToken{
+		workspaceID: WorkspaceToken{
+			Token: token,
+			E2EE:  (e2ee == "enabled"),
+		},
+	})
+	client.Verbose = (verbose == "true")
 
 	////////////////////////////////
 	// test api functions

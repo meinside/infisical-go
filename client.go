@@ -7,21 +7,19 @@ import (
 
 // Client struct
 type Client struct {
-	apiKey      *string
-	token       *string
-	e2eeEnabled bool
+	apiKey          *string
+	workspaceTokens map[string]WorkspaceToken
 
 	httpClient *http.Client
 
 	Verbose bool // NOTE: set for dumping http requests & responses
 }
 
-// NewE2EEEnabledClient returns a client struct which is E2EE enabled.
-func NewE2EEEnabledClient(apiKey, token string) *Client {
+// NewClient creates a new client and return it.
+func NewClient(apiKey string, workspaceTokens map[string]WorkspaceToken) *Client {
 	return &Client{
-		apiKey:      &apiKey,
-		token:       &token,
-		e2eeEnabled: true,
+		apiKey:          &apiKey,
+		workspaceTokens: workspaceTokens,
 
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
@@ -29,20 +27,13 @@ func NewE2EEEnabledClient(apiKey, token string) *Client {
 	}
 }
 
-// NewE2EEDisabledClient returns a client struct which is E2EE disabled.
-func NewE2EEDisabledClient(token string) *Client {
+// NewClientWithoutAPIKey creates a new client only with tokens and return it.
+func NewClientWithoutAPIKey(workspaceTokens map[string]WorkspaceToken) *Client {
 	return &Client{
-		token:       &token,
-		e2eeEnabled: false,
+		workspaceTokens: workspaceTokens,
 
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
 		},
 	}
-}
-
-// SetAPIKey sets the `api_key` value of the client and returns it.
-func (c *Client) SetAPIKey(apiKey string) *Client {
-	c.apiKey = &apiKey
-	return c
 }

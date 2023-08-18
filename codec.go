@@ -81,17 +81,17 @@ func decodeBase64(encoded string) (decoded []byte, err error) {
 }
 
 // get service token and decrypt project key from it
-func (c *Client) projectKey() (projectKey []byte, err error) {
+func (c *Client) projectKey(token WorkspaceToken) (projectKey []byte, err error) {
 	var serviceToken ServiceToken
-	if serviceToken, err = c.RetrieveServiceToken(); err != nil {
+	if serviceToken, err = c.RetrieveServiceToken(token); err != nil {
 		return nil, err
 	}
 
-	if empty(c.token) {
+	if token.Token == "" {
 		return nil, fmt.Errorf("`token` is missing, cannot decrypt project key")
 	}
 
-	splittedToken := strings.Split(*c.token, ".")
+	splittedToken := strings.Split(token.Token, ".")
 	serviceTokenSecret := splittedToken[len(splittedToken)-1]
 
 	// decrypt things
@@ -113,9 +113,9 @@ func (c *Client) projectKey() (projectKey []byte, err error) {
 }
 
 // decrypt encrypted secrets (when E2EE is enabled)
-func (c *Client) decryptSecrets(secrets []Secret) (decrypted []Secret, err error) {
+func (c *Client) decryptSecrets(token WorkspaceToken, secrets []Secret) (decrypted []Secret, err error) {
 	var projectKey []byte
-	if projectKey, err = c.projectKey(); err != nil {
+	if projectKey, err = c.projectKey(token); err != nil {
 		return nil, err
 	}
 
@@ -177,9 +177,9 @@ func (c *Client) decryptSecrets(secrets []Secret) (decrypted []Secret, err error
 }
 
 // decrypt an encrypted secret (when E2EE is enabled)
-func (c *Client) decryptSecret(secret Secret) (decrypted Secret, err error) {
+func (c *Client) decryptSecret(token WorkspaceToken, secret Secret) (decrypted Secret, err error) {
 	var projectKey []byte
-	if projectKey, err = c.projectKey(); err != nil {
+	if projectKey, err = c.projectKey(token); err != nil {
 		return Secret{}, err
 	}
 
