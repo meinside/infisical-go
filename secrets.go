@@ -77,7 +77,7 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 // Just a helper function for `RetrieveSecrets`.
 //
 // `secretPath` is in form of: "/folder1/folder2/..."
-func (c *Client) RetrieveSecretsAtPath(secretPath, workspaceID, environment string) (secrets []Secret, err error) {
+func (c *Client) RetrieveSecretsAtPath(workspaceID, environment, secretPath string) (secrets []Secret, err error) {
 	params := NewParamsRetrieveSecrets().
 		SetSecretPath(secretPath)
 
@@ -92,7 +92,7 @@ func (c *Client) RetrieveSecretsAtPath(secretPath, workspaceID, environment stri
 // CreateSecret creates a secret with given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/create
-func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue string, params ParamsCreateSecret) (err error) {
+func (c *Client) CreateSecret(workspaceID, environment, secretKey, secretValue string, params ParamsCreateSecret) (err error) {
 	var token WorkspaceToken
 	var exists bool
 	if token, exists = c.workspaceTokens[workspaceID]; !exists {
@@ -170,7 +170,7 @@ func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue s
 // RetrieveSecret retrieves a secret for given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/read-one
-func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, params ParamsRetrieveSecret) (result SecretData, err error) {
+func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, params ParamsRetrieveSecret) (result SecretData, err error) {
 	var token WorkspaceToken
 	var exists bool
 	if token, exists = c.workspaceTokens[workspaceID]; !exists {
@@ -236,7 +236,7 @@ func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, para
 // Just a helper function for `RetrieveSecret`.
 //
 // `secretKeyWithPath` is in form of: "/folder1/folder2/.../secret_key_name"
-func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment string, secretType SecretType) (value string, err error) {
+func (c *Client) RetrieveSecretValue(workspaceID, environment string, secretType SecretType, secretKeyWithPath string) (value string, err error) {
 	// secretKeyWithPath => secretKey + secretPath
 	splitted := strings.Split(secretKeyWithPath, "/")
 	secretKey := splitted[len(splitted)-1]
@@ -248,7 +248,7 @@ func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment
 			SetType(secretType)
 
 		var retrieved SecretData
-		if retrieved, err = c.RetrieveSecret(secretKey, workspaceID, environment, params); err == nil {
+		if retrieved, err = c.RetrieveSecret(workspaceID, environment, secretKey, params); err == nil {
 			return retrieved.Secret.SecretValue, nil
 		}
 
@@ -274,7 +274,7 @@ func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment
 // UpdateSecret updates a secret with given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/update
-func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue string, params ParamsUpdateSecret) (err error) {
+func (c *Client) UpdateSecret(workspaceID, environment, secretKey, secretValue string, params ParamsUpdateSecret) (err error) {
 	var token WorkspaceToken
 	var exists bool
 	if token, exists = c.workspaceTokens[workspaceID]; !exists {
@@ -346,7 +346,7 @@ func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue s
 // DeleteSecret deletes a secret for given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/delete
-func (c *Client) DeleteSecret(secretKey, workspaceID, environment string, params ParamsDeleteSecret) (err error) {
+func (c *Client) DeleteSecret(workspaceID, environment, secretKey string, params ParamsDeleteSecret) (err error) {
 	var token WorkspaceToken
 	var exists bool
 	if token, exists = c.workspaceTokens[workspaceID]; !exists {

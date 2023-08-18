@@ -30,7 +30,7 @@ func TestSecrets(t *testing.T) {
 		t.Fatalf("no environment variables: `INFISICAL_API_KEY`, `INFISICAL_TOKEN`, `INFISICAL_WORKSPACE_ID`, or `INFISICAL_ENVIRONMENT` were found.")
 	}
 	client := NewClient(apiKey, map[string]WorkspaceToken{
-		workspaceID: WorkspaceToken{
+		workspaceID: {
 			Token: token,
 			E2EE:  (e2ee == "enabled"),
 		},
@@ -53,9 +53,9 @@ func TestSecrets(t *testing.T) {
 
 		// (create a secret)
 		if err := client.CreateSecret(
-			secretKey,
 			workspaceID,
 			environment,
+			secretKey,
 			secretValue,
 			NewParamsCreateSecret().
 				SetType(secretType).
@@ -66,9 +66,9 @@ func TestSecrets(t *testing.T) {
 
 		// (retrieve a secret)
 		if secret, err := client.RetrieveSecret(
-			secretKey,
 			workspaceID,
 			environment,
+			secretKey,
 			NewParamsRetrieveSecret().
 				SetType(secretType),
 		); err != nil {
@@ -79,9 +79,9 @@ func TestSecrets(t *testing.T) {
 			} else {
 				// (update a secret)
 				if err := client.UpdateSecret(
-					secretKey,
 					workspaceID,
 					environment,
+					secretKey,
 					secretValueUpdated,
 					NewParamsUpdateSecret().
 						SetType(secretType).
@@ -91,9 +91,9 @@ func TestSecrets(t *testing.T) {
 				} else {
 					// (retrieve a secret)
 					if secret, err := client.RetrieveSecret(
-						secretKey,
 						workspaceID,
 						environment,
+						secretKey,
 						NewParamsRetrieveSecret().
 							SetType(secretType),
 					); err != nil {
@@ -104,9 +104,9 @@ func TestSecrets(t *testing.T) {
 						} else {
 							// (delete the newly-created & updated secret)
 							if err := client.DeleteSecret(
-								secret.Secret.SecretKey,
 								secret.Secret.Workspace,
 								secret.Secret.Environment,
+								secret.Secret.SecretKey,
 								NewParamsDeleteSecret().
 									SetType(secret.Secret.Type),
 							); err != nil {
