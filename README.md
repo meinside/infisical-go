@@ -4,6 +4,8 @@
 
 ## Usage
 
+### Sample Code
+
 ```go
 package main
 
@@ -69,7 +71,71 @@ Output:
 2023/08/16 14:30:36 retrieved value for secret key '/folder1/folder2/KEY_B' = 'value B'
 ```
 
-## Implemented
+### Helper Functions
+
+Use `helper.E2EEValue()` for retrieving values from E2EE-enabled workspaces:
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/meinside/infisical-go"
+	"github.com/meinside/infisical-go/helper"
+)
+
+const (
+	apiKey = "ak.1234567890.abcdefghijk"
+
+	workspaceID = "012345abcdefg"
+	token       = "st.xyzwabcd.0987654321.abcdefghijklmnop"
+	environment = "dev"
+	secretType    = infisical.SecretTypeShared
+	secretKeyPath = "/folder1/folder2/KEY_A"
+)
+
+func main() {
+	value, err := helper.E2EEValue(apiKey, workspaceID, token, environment, secretType, secretKeyPath)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("retrieved value for key: %s = %s", secretKeyPath, value)
+}
+```
+
+Or use `helper.Value()` for retrieving values from E2EE-disabled workspaces:
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/meinside/infisical-go"
+	"github.com/meinside/infisical-go/helper"
+)
+
+const (
+	workspaceID = "012345abcdefg"
+	token       = "st.xyzwabcd.0987654321.abcdefghijklmnop"
+	environment = "dev"
+	secretType    = infisical.SecretTypeShared
+	secretKeyPath = "/folder1/folder2/KEY_A"
+)
+
+func main() {
+	value, err := helper.Value(workspaceID, token, environment, secretType, secretKeyPath)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("retrieved value for key: %s = %s", secretKeyPath, value)
+}
+```
+
+## Implemented APIs
 
 * Users
 - [ ] [Get My User](https://infisical.com/docs/api-reference/endpoints/users/me)
