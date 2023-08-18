@@ -224,7 +224,7 @@ func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment
 	secretKey := splitted[len(splitted)-1]
 	secretPath := strings.TrimSuffix(secretKeyWithPath, secretKey)
 
-	if c.apiKey != nil && len(*c.apiKey) > 0 {
+	if !empty(c.apiKey) {
 		params := NewParamsRetrieveSecret().
 			SetSecretPath(secretPath).
 			SetType(secretType)
