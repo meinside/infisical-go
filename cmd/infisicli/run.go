@@ -54,9 +54,12 @@ const (
 
 // config struct
 type config struct {
-	APIKey      string `json:"api_key,omitempty"`
-	Token       string `json:"token"`
-	E2EEEnabled bool   `json:"e2ee_enabled"`
+	// Infisical Account's API Key
+	APIKey string `json:"api_key,omitempty"`
+
+	// key = worksace ID
+	// value = workspace token
+	Workspaces map[string]infisical.WorkspaceToken `json:"workspaces"`
 }
 
 // load config file
@@ -243,17 +246,12 @@ func do(fn func(c *infisical.Client) error, verbose bool) error {
 
 	if err == nil {
 		var client *infisical.Client
-		if cfg.E2EEEnabled {
-			client = infisical.NewE2EEEnabledClient(cfg.APIKey, cfg.Token)
+		if cfg.APIKey != "" {
+			client = infisical.NewClient(cfg.APIKey, cfg.Workspaces)
 		} else {
-			client = infisical.NewE2EEDisabledClient(cfg.Token).SetAPIKey(cfg.APIKey)
+			client = infisical.NewClientWithoutAPIKey(cfg.Workspaces)
 		}
 		client.Verbose = verbose
-
-		// NOTE: api key is optional
-		if cfg.APIKey != "" {
-			client.SetAPIKey(cfg.APIKey)
-		}
 
 		return fn(client)
 	}

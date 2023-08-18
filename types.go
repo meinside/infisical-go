@@ -2,6 +2,12 @@ package infisical
 
 import "strings"
 
+// WorkspaceToken struct
+type WorkspaceToken struct {
+	Token string `json:"token"`
+	E2EE  bool   `json:"e2ee"`
+}
+
 // type aliases
 
 type ParamsRetrieveSecrets map[string]any

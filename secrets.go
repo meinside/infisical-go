@@ -12,6 +12,12 @@ import (
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/read
 func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsRetrieveSecrets) (result SecretsData, err error) {
+	var token WorkspaceToken
+	var exists bool
+	if token, exists = c.workspaceTokens[workspaceID]; !exists {
+		return SecretsData{}, fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
+	}
+
 	if params == nil {
 		params = NewParamsRetrieveSecrets()
 	}
@@ -21,14 +27,14 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 	params["environment"] = environment
 
 	var path string
-	if c.e2eeEnabled {
+	if token.E2EE {
 		path = "/v3/secrets/"
 	} else {
 		path = "/v3/secrets/raw/"
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodNormal, params)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodNormal, &token, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -40,10 +46,10 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 			if res.StatusCode == 200 {
 				if body, err = io.ReadAll(res.Body); err == nil {
 					if err = json.Unmarshal(body, &result); err == nil {
-						if c.e2eeEnabled {
+						if token.E2EE {
 							// decrypt it
 							var secrets []Secret
-							if secrets, err = c.decryptSecrets(result.Secrets); err != nil {
+							if secrets, err = c.decryptSecrets(token, result.Secrets); err != nil {
 								return SecretsData{}, fmt.Errorf("failed to decrypt retrieved secrets: %s", err)
 							}
 							return SecretsData{Secrets: secrets}, nil
@@ -87,6 +93,12 @@ func (c *Client) RetrieveSecretsAtPath(secretPath, workspaceID, environment stri
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/create
 func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue string, params ParamsCreateSecret) (err error) {
+	var token WorkspaceToken
+	var exists bool
+	if token, exists = c.workspaceTokens[workspaceID]; !exists {
+		return fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
+	}
+
 	if params == nil {
 		params = NewParamsCreateSecret()
 	}
@@ -97,11 +109,11 @@ func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue s
 	params["secretValue"] = secretValue
 
 	var path string
-	if c.e2eeEnabled {
+	if token.E2EE {
 		path = "/v3/secrets/%s"
 
 		var projectKey []byte
-		if projectKey, err = c.projectKey(); err != nil {
+		if projectKey, err = c.projectKey(token); err != nil {
 			return err
 		}
 
@@ -140,7 +152,7 @@ func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue s
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodNormal, params)
+	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
 	if err != nil {
 		return err
 	}
@@ -159,6 +171,12 @@ func (c *Client) CreateSecret(secretKey, workspaceID, environment, secretValue s
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/read-one
 func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, params ParamsRetrieveSecret) (result SecretData, err error) {
+	var token WorkspaceToken
+	var exists bool
+	if token, exists = c.workspaceTokens[workspaceID]; !exists {
+		return SecretData{}, fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
+	}
+
 	if params == nil {
 		params = NewParamsRetrieveSecret()
 	}
@@ -168,14 +186,14 @@ func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, para
 	params["environment"] = environment
 
 	var path string
-	if c.e2eeEnabled {
+	if token.E2EE {
 		path = "/v3/secrets/%s"
 	} else {
 		path = "/v3/secrets/raw/%s"
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodAPIKeyOnly, params)
+	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodAPIKeyOnly, &token, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -187,10 +205,10 @@ func (c *Client) RetrieveSecret(secretKey, workspaceID, environment string, para
 			if res.StatusCode == 200 {
 				if body, err = io.ReadAll(res.Body); err == nil {
 					if err = json.Unmarshal(body, &result); err == nil {
-						if c.e2eeEnabled {
+						if token.E2EE {
 							// decrypt it
 							var secret Secret
-							if secret, err = c.decryptSecret(result.Secret); err != nil {
+							if secret, err = c.decryptSecret(token, result.Secret); err != nil {
 								return SecretData{}, fmt.Errorf("failed to decrypt retrieved secret: %s", err)
 							}
 							return SecretData{Secret: secret}, nil
@@ -224,7 +242,7 @@ func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment
 	secretKey := splitted[len(splitted)-1]
 	secretPath := strings.TrimSuffix(secretKeyWithPath, secretKey)
 
-	if !empty(c.apiKey) {
+	if !emptyString(c.apiKey) {
 		params := NewParamsRetrieveSecret().
 			SetSecretPath(secretPath).
 			SetType(secretType)
@@ -257,6 +275,12 @@ func (c *Client) RetrieveSecretValue(secretKeyWithPath, workspaceID, environment
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/update
 func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue string, params ParamsUpdateSecret) (err error) {
+	var token WorkspaceToken
+	var exists bool
+	if token, exists = c.workspaceTokens[workspaceID]; !exists {
+		return fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
+	}
+
 	if params == nil {
 		params = NewParamsUpdateSecret()
 	}
@@ -267,15 +291,15 @@ func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue s
 	params["secretValue"] = secretValue
 
 	var path string
-	if c.e2eeEnabled {
+	if token.E2EE {
 		path = "/v3/secrets/%s"
 	} else {
 		path = "/v3/secrets/raw/%s"
 	}
 
-	if c.e2eeEnabled {
+	if token.E2EE {
 		var projectKey []byte
-		if projectKey, err = c.projectKey(); err != nil {
+		if projectKey, err = c.projectKey(token); err != nil {
 			return err
 		}
 
@@ -304,7 +328,7 @@ func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue s
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodNormal, params)
+	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
 	if err != nil {
 		return err
 	}
@@ -323,6 +347,12 @@ func (c *Client) UpdateSecret(secretKey, workspaceID, environment, secretValue s
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/delete
 func (c *Client) DeleteSecret(secretKey, workspaceID, environment string, params ParamsDeleteSecret) (err error) {
+	var token WorkspaceToken
+	var exists bool
+	if token, exists = c.workspaceTokens[workspaceID]; !exists {
+		return fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
+	}
+
 	if params == nil {
 		params = NewParamsDeleteSecret()
 	}
@@ -332,14 +362,14 @@ func (c *Client) DeleteSecret(secretKey, workspaceID, environment string, params
 	params["environment"] = environment
 
 	var path string
-	if c.e2eeEnabled {
+	if token.E2EE {
 		path = "/v3/secrets/%s"
 	} else {
 		path = "/v3/secrets/raw/%s"
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodNormal, params)
+	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
 	if err == nil {
 		c.dumpRequest(req)
 

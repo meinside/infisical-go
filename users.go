@@ -14,7 +14,7 @@ func (c *Client) RetrieveOrganizations() (result OrganizationsData, err error) {
 	path := "/v2/users/me/organizations"
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKeyOnly, nil)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKeyOnly, nil, nil)
 	if err == nil {
 		c.dumpRequest(req)
 

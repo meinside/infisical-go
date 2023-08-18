@@ -16,11 +16,12 @@ import (
 // NOTE: put yours here
 const (
 	// authentication
-	apiKey      = "ak.1234567890.abcdefghijk"
-	token       = "st.xyzwabcd.0987654321.abcdefghijklmnop"
+	apiKey = "ak.1234567890.abcdefghijk"
 
 	// workspace & environment
 	workspaceID = "012345abcdefg"
+	e2ee        = true
+	token       = "st.xyzwabcd.0987654321.abcdefghijklmnop"
 	environment = "dev"
 
 	keyPath    = "/folder1/folder2"
@@ -31,8 +32,13 @@ const (
 )
 
 func main() {
-	// create a client, (NOTE: enable E2EE setting in your project)
-	client := infisical.NewE2EEEnabledClient(apiKey, token)
+	// create a client,
+	client := infisical.NewClient(apiKey, map[string]infisical.WorkspaceToken{
+		workspaceID: {
+			Token: token,
+			E2EE:  e2ee,
+		},
+	})
 	client.Verbose = verbose
 
 	// fetch all secrets at a path,

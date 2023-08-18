@@ -8,27 +8,17 @@ import (
 func TestUsersAndOrganizations(t *testing.T) {
 	////////////////////////////////
 	// read values from environment variables
-	var token, apiKey, e2ee, verbose string
-	token = os.Getenv("INFISICAL_TOKEN")
+	var apiKey, verbose string
 	apiKey = os.Getenv("INFISICAL_API_KEY")
-	e2ee = os.Getenv("INFISICAL_E2EE") // NOTE: "enabled" or not
-	verbose = os.Getenv("VERBOSE")     // NOTE: "true" or not
-	var e2eeEnabled = (e2ee == "enabled")
-	var isVerbose = (verbose == "true")
+	verbose = os.Getenv("VERBOSE") // NOTE: "true" or not
 
 	////////////////////////////////
 	// initialize client
-	var client *Client
-	if token == "" || apiKey == "" {
-		t.Fatalf("no environment variables: `INFISICAL_TOKEN` or `INFISICAL_API_KEY` were found.")
-	} else {
-		if e2eeEnabled {
-			client = NewE2EEEnabledClient(apiKey, token)
-		} else {
-			client = NewE2EEDisabledClient(token).SetAPIKey(apiKey)
-		}
+	if apiKey == "" {
+		t.Fatalf("no environment variable: `INFISICAL_API_KEY` was found.")
 	}
-	client.Verbose = isVerbose
+	client := NewClient(apiKey, nil)
+	client.Verbose = (verbose == "true")
 
 	////////////////////////////////
 	// test api functions

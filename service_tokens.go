@@ -10,9 +10,9 @@ import (
 // RetrieveServiceToken retrieves service token data.
 //
 // https://infisical.com/docs/api-reference/endpoints/service-tokens/get
-func (c *Client) RetrieveServiceToken() (result ServiceToken, err error) {
+func (c *Client) RetrieveServiceToken(token WorkspaceToken) (result ServiceToken, err error) {
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", "/v2/service-token/", AuthMethodNormal, nil)
+	req, err = c.newRequestWithQueryParams("GET", "/v2/service-token/", AuthMethodNormal, &token, nil)
 	if err == nil {
 		c.dumpRequest(req)
 
