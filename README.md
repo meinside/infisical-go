@@ -42,14 +42,14 @@ func main() {
 	client.Verbose = verbose
 
 	// fetch all secrets at a path,
-	if secrets, err := client.RetrieveSecretsAtPath(keyPath, workspaceID, environment); err == nil {
+	if secrets, err := client.RetrieveSecretsAtPath(workspaceID, environment, keyPath); err == nil {
 		log.Printf("retrieved %d secret(s) at path '%s'", len(secrets), keyPath)
 
 		for _, secret := range secrets {
 			// fetch a value directly with path + key
 			key := keyPath + "/" + secret.SecretKey
 
-			if value, err := client.RetrieveSecretValue(key, workspaceID, environment, secret.Type); err == nil {
+			if value, err := client.RetrieveSecretValue(workspaceID, environment, secret.Type, key); err == nil {
 				log.Printf("retrieved value for secret key '%s' = '%s'", key, value)
 			} else {
 				panic(err)

@@ -361,7 +361,7 @@ func doPrintValue(args []string, verbose bool) error {
 		}
 
 		var result string
-		result, err = c.RetrieveSecretValue(key, workspace, environment, infisical.SecretType(typ))
+		result, err = c.RetrieveSecretValue(workspace, environment, infisical.SecretType(typ), key)
 		if err == nil {
 			fmt.Printf("%s", result)
 
