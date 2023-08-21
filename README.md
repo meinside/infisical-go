@@ -168,6 +168,19 @@ func main() {
 * Service Tokens
 - [X] [Get](https://infisical.com/docs/api-reference/endpoints/service-tokens/get)
 
+## Error Codes
+
+There is no detailed description in error responses from API (for now),
+
+so it's sometimes quite hard to find out what is going wrong.
+
+In my case, the reasons for common HTTP errors were:
+
+* HTTP `400`: there were some missing parameters, or some of them were wrong/misformatted.
+* HTTP `401`: was trying to access something with expired or wrong API key and/or token.
+* HTTP `403`: was trying to access things that were not accessible with current API key and/or token.
+* HTTP `404`: was trying to access something that doesn't exist; wrong key-path or etc.
+
 ## Test
 
 With some environment variables:

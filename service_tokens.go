@@ -1,9 +1,7 @@
 package infisical
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 )
 
@@ -20,19 +18,8 @@ func (c *Client) RetrieveServiceToken(token WorkspaceToken) (result ServiceToken
 		if res, err = c.httpClient.Do(req); err == nil {
 			c.dumpResponse(res)
 
-			var body []byte
-			if res.StatusCode == 200 {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					if err = json.Unmarshal(body, &result); err == nil {
-						return result, nil
-					}
-				}
-			} else {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					err = fmt.Errorf("HTTP %d error: `%s`", res.StatusCode, string(body))
-				} else {
-					err = fmt.Errorf("HTTP %d error", res.StatusCode)
-				}
+			if err = c.parseResponse(res, &result); err == nil {
+				return result, nil
 			}
 		}
 	}

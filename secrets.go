@@ -1,9 +1,7 @@
 package infisical
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 )
@@ -42,28 +40,17 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 		if res, err = c.httpClient.Do(req); err == nil {
 			c.dumpResponse(res)
 
-			var body []byte
-			if res.StatusCode == 200 {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					if err = json.Unmarshal(body, &result); err == nil {
-						if token.E2EE {
-							// decrypt it
-							var secrets []Secret
-							if secrets, err = c.decryptSecrets(token, result.Secrets); err != nil {
-								return SecretsData{}, fmt.Errorf("failed to decrypt retrieved secrets: %s", err)
-							}
-							return SecretsData{Secrets: secrets}, nil
-						} else {
-							// return as it is
-							return result, nil
-						}
+			if err = c.parseResponse(res, &result); err == nil {
+				if token.E2EE {
+					// decrypt it
+					var secrets []Secret
+					if secrets, err = c.decryptSecrets(token, result.Secrets); err != nil {
+						return SecretsData{}, fmt.Errorf("failed to decrypt retrieved secrets: %s", err)
 					}
-				}
-			} else {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					err = fmt.Errorf("HTTP %d error: `%s`", res.StatusCode, string(body))
+					return SecretsData{Secrets: secrets}, nil
 				} else {
-					err = fmt.Errorf("HTTP %d error", res.StatusCode)
+					// return as it is
+					return result, nil
 				}
 			}
 		}
@@ -201,29 +188,21 @@ func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, para
 		if res, err = c.httpClient.Do(req); err == nil {
 			c.dumpResponse(res)
 
-			var body []byte
-			if res.StatusCode == 200 {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					if err = json.Unmarshal(body, &result); err == nil {
-						if token.E2EE {
-							// decrypt it
-							var secret Secret
-							if secret, err = c.decryptSecret(token, result.Secret); err != nil {
-								return SecretData{}, fmt.Errorf("failed to decrypt retrieved secret: %s", err)
-							}
-							return SecretData{Secret: secret}, nil
-						} else {
-							// return as it is
-							return result, nil
-						}
+			if err = c.parseResponse(res, &result); err == nil {
+				if token.E2EE {
+					// decrypt it
+					var secret Secret
+					if secret, err = c.decryptSecret(token, result.Secret); err != nil {
+						return SecretData{}, fmt.Errorf("failed to decrypt retrieved secret: %s", err)
 					}
-				}
-			} else {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					err = fmt.Errorf("HTTP %d error: `%s`", res.StatusCode, string(body))
+					return SecretData{Secret: secret}, nil
 				} else {
-					err = fmt.Errorf("HTTP %d error", res.StatusCode)
+					// return as it is
+					return result, nil
 				}
+			}
+			if err = c.parseResponse(res, &result); err == nil {
+				return result, nil
 			}
 		}
 	}
@@ -377,16 +356,7 @@ func (c *Client) DeleteSecret(workspaceID, environment, secretKey string, params
 		if res, err = c.httpClient.Do(req); err == nil {
 			c.dumpResponse(res)
 
-			var body []byte
-			if res.StatusCode == 200 {
-				return nil
-			} else {
-				if body, err = io.ReadAll(res.Body); err == nil {
-					err = fmt.Errorf("HTTP %d error: `%s`", res.StatusCode, string(body))
-				} else {
-					err = fmt.Errorf("HTTP %d error", res.StatusCode)
-				}
-			}
+			return c.parseResponse(res, nil)
 		}
 	}
 
