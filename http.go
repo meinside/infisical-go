@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -141,6 +142,51 @@ func (c *Client) newRequestWithJSONBody(method, path string, authMethod AuthMeth
 	}
 
 	return req, err
+}
+
+// parse response into given interface
+func (c *Client) parseResponse(res *http.Response, into any) (err error) {
+	var body []byte
+	if res.StatusCode == 200 {
+		if into != nil {
+			if body, err = io.ReadAll(res.Body); err == nil {
+				return json.Unmarshal(body, &into)
+			}
+		} else {
+			return nil
+		}
+	} else {
+		if body, err = io.ReadAll(res.Body); err == nil {
+			err = fmt.Errorf("%s: `%s`", httpStatusToErr(res.StatusCode), string(body))
+		} else {
+			err = httpStatusToErr(res.StatusCode)
+		}
+	}
+
+	return err
+}
+
+// convert HTTP status code to a meaningful error
+func httpStatusToErr(status int) error {
+	httpError := fmt.Sprintf("HTTP %d", status)
+
+	switch status {
+	case 400:
+		return fmt.Errorf("%s; bad request", httpError)
+	case 401:
+		return fmt.Errorf("%s; unauthorized", httpError)
+	case 403:
+		return fmt.Errorf("%s; forbidden", httpError)
+	case 404:
+		return fmt.Errorf("%s; not found", httpError)
+	case 500:
+		return fmt.Errorf("%s; internal server error", httpError)
+	case 503:
+		return fmt.Errorf("%s; service unavailable", httpError)
+	}
+
+	// fallback
+	return fmt.Errorf(httpError)
 }
 
 // checks if given string pointer is an empty string
