@@ -20,7 +20,7 @@ func Value(workspaceID, token, environment string, secretType infisical.SecretTy
 	return client.RetrieveSecretValue(workspaceID, environment, secretType, secretKeyPath)
 }
 
-// Values returns the secret values for given parameters.
+// Values returns multiple secret values for given parameters.
 //
 // Works only on E2EE-disabled workspaces.
 func Values(workspaceID, token, environment string, secretType infisical.SecretType, secretKeyPaths []string) (map[string]string, error) {
@@ -61,7 +61,7 @@ func E2EEValue(apiKey, workspaceID, token, environment string, secretType infisi
 	return client.RetrieveSecretValue(workspaceID, environment, secretType, secretKeyPath)
 }
 
-// E2EEValue returns the decrypted secret values for given parameters.
+// E2EEValues returns multiple decrypted secret values for given parameters.
 //
 // Works only on E2EE-enabled workspaces.
 func E2EEValues(apiKey, workspaceID, token, environment string, secretType infisical.SecretType, secretKeyPaths []string) (map[string]string, error) {
