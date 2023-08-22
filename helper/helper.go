@@ -64,8 +64,8 @@ func E2EEValue(apiKey, workspaceID, token, environment string, secretType infisi
 // E2EEValue returns the decrypted secret values for given parameters.
 //
 // Works only on E2EE-enabled workspaces.
-func E2EEValues(workspaceID, token, environment string, secretType infisical.SecretType, secretKeyPaths []string) (map[string]string, error) {
-	client := infisical.NewClientWithoutAPIKey(map[string]infisical.WorkspaceToken{
+func E2EEValues(apiKey, workspaceID, token, environment string, secretType infisical.SecretType, secretKeyPaths []string) (map[string]string, error) {
+	client := infisical.NewClient(apiKey, map[string]infisical.WorkspaceToken{
 		workspaceID: {
 			Token: token,
 			E2EE:  true,
