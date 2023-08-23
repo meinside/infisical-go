@@ -161,7 +161,7 @@ func main() {
 - [X] [Create](https://infisical.com/docs/api-reference/endpoints/secrets/create)
 - [X] [Retrieve](https://infisical.com/docs/api-reference/endpoints/secrets/read-one)
 - [X] [Update](https://infisical.com/docs/api-reference/endpoints/secrets/update)
-- [ ] [Delete](https://infisical.com/docs/api-reference/endpoints/secrets/delete) // FIXME: fails with 404 error
+- [X] [Delete](https://infisical.com/docs/api-reference/endpoints/secrets/delete)
 - [ ] [Get Versions](https://infisical.com/docs/api-reference/endpoints/secrets/versions)
 - [ ] [Roll Back to Version](https://infisical.com/docs/api-reference/endpoints/secrets/rollback-version)
 
