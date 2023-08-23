@@ -19,7 +19,10 @@ func NewParamsRetrieveSecrets() ParamsRetrieveSecrets {
 }
 
 func (p ParamsRetrieveSecrets) SetSecretPath(secretPath string) ParamsRetrieveSecrets {
-	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
 	return p
 }
 
@@ -38,7 +41,10 @@ func (p ParamsCreateSecret) SetSecretComment(secretComment string) ParamsCreateS
 }
 
 func (p ParamsCreateSecret) SetSecretPath(secretPath string) ParamsCreateSecret {
-	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
 	return p
 }
 
@@ -57,7 +63,10 @@ func NewParamsRetrieveSecret() ParamsRetrieveSecret {
 }
 
 func (p ParamsRetrieveSecret) SetSecretPath(secretPath string) ParamsRetrieveSecret {
-	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
 	return p
 }
 
@@ -76,7 +85,10 @@ func NewParamsUpdateSecret() ParamsUpdateSecret {
 }
 
 func (p ParamsUpdateSecret) SetSecretPath(secretPath string) ParamsUpdateSecret {
-	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
 	return p
 }
 
@@ -100,7 +112,10 @@ func NewParamsDeleteSecret() ParamsDeleteSecret {
 }
 
 func (p ParamsDeleteSecret) SetSecretPath(secretPath string) ParamsDeleteSecret {
-	p["secretPath"] = strings.TrimSuffix(secretPath, "/")
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
 	return p
 }
 
