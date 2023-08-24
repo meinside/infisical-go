@@ -12,6 +12,8 @@ type Client struct {
 
 	httpClient *http.Client
 
+	baseURL string
+
 	Verbose bool // NOTE: set for dumping http requests & responses
 }
 
@@ -24,6 +26,8 @@ func NewClient(apiKey string, workspaceTokens map[string]WorkspaceToken) *Client
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
 		},
+
+		baseURL: DefaultAPIBaseURL,
 	}
 }
 
@@ -35,5 +39,12 @@ func NewClientWithoutAPIKey(workspaceTokens map[string]WorkspaceToken) *Client {
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
 		},
+
+		baseURL: DefaultAPIBaseURL,
 	}
+}
+
+// SetAPIBaseURL changes the `baseURL`. (eg. for using in self-hosted infisical server)
+func (c *Client) SetAPIBaseURL(baseURL string) {
+	c.baseURL = baseURL
 }

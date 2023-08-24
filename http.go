@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	APIBaseURL     = "https://app.infisical.com/api"
-	TimeoutSeconds = 10
+	DefaultAPIBaseURL = "https://app.infisical.com"
+	TimeoutSeconds    = 10
 )
 
 type AuthMethod int
@@ -54,7 +54,7 @@ func (c *Client) newRequestWithQueryParams(method, path string, authMethod AuthM
 		return nil, fmt.Errorf("%s %s requires `token` that is missing, cannot generate a request", method, path)
 	}
 
-	url := fmt.Sprintf("%s%s", APIBaseURL, path)
+	url := fmt.Sprintf("%s/api%s", c.baseURL, path)
 
 	if req, err = http.NewRequest(method, url, nil); err == nil {
 		// query parameters
@@ -109,7 +109,7 @@ func (c *Client) newRequestWithJSONBody(method, path string, authMethod AuthMeth
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s%s", APIBaseURL, path)
+	url := fmt.Sprintf("%s/api%s", c.baseURL, path)
 
 	if req, err = http.NewRequest(method, url, bytes.NewReader(encoded)); err == nil {
 		req.Header.Set("Content-Type", "application/json")
