@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -240,6 +241,21 @@ func run(args []string) {
 	showHelp(err)
 }
 
+// get max length of given items
+func maxLength[T any](items []T, lenFunc func(item T) int) (max int) {
+	max = math.MinInt
+
+	var current int
+	for _, item := range items {
+		current = lenFunc(item)
+		if current > max {
+			max = current
+		}
+	}
+
+	return max
+}
+
 // do something with the client
 func do(fn func(c *infisical.Client) error, verbose bool) error {
 	cfg, err := loadConfig()
@@ -264,8 +280,22 @@ func doListOrganizations(verbose bool) error {
 	return do(func(c *infisical.Client) error {
 		result, err := c.RetrieveOrganizations()
 		if err == nil {
+			// calculate max lengths for formatting
+			maxLenOrg := maxLength(result.Organizations, func(org infisical.Organization) int {
+				return len(org.Name)
+			})
+			maxLenID := maxLength(result.Organizations, func(org infisical.Organization) int {
+				return len(org.ID)
+			})
+			format := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenID, maxLenOrg)
+
+			// print headers
+			fmt.Printf(format, "id", "name")
+			fmt.Printf("----\n")
+
+			// print organizations
 			for _, org := range result.Organizations {
-				fmt.Printf("org: %s	| id: %s (customer id: %s)\n", org.Name, org.ID, org.CustomerID)
+				fmt.Printf(format, org.ID, org.Name)
 			}
 
 			os.Exit(0)
@@ -289,11 +319,34 @@ func doListWorkspaces(args []string, verbose bool) error {
 			workspaces, err = c.RetrieveProjects(org)
 
 			if err == nil {
-				for _, workspace := range workspaces.Workspaces {
-					fmt.Printf("workspace: %s	| name: %s\n", workspace.ID, workspace.Name)
+				// calculate max lengths for formatting
+				maxLenWorkspaceID := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
+					return len(workspace.ID)
+				})
+				maxLenWorkspaceName := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
+					return len(workspace.Name)
+				})
+				workspaceFormat := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenWorkspaceID, maxLenWorkspaceName)
 
+				// print headers
+				fmt.Printf(workspaceFormat, "workspace id", "name")
+
+				for _, workspace := range workspaces.Workspaces {
+					maxLenSlug := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
+						return len(env.Slug)
+					})
+					maxLenName := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
+						return len(env.Name)
+					})
+					envFormat := fmt.Sprintf("  %%%ds | %%%ds (%%s)\n", maxLenSlug, maxLenName)
+
+					// print workspace
+					fmt.Printf("----\n")
+					fmt.Printf(workspaceFormat, workspace.ID, workspace.Name)
+
+					// print environments
 					for _, env := range workspace.Environments {
-						fmt.Printf(" - env: %s	| name: %s, id: %s\n", env.Slug, env.Name, env.ID)
+						fmt.Printf(envFormat, env.Slug, env.Name, env.ID)
 					}
 				}
 
@@ -329,8 +382,24 @@ func doListAllSecrets(args []string, verbose bool) error {
 		result, err = c.RetrieveSecrets(workspace, environment, secretsParam)
 
 		if err == nil {
+			maxLenWorkspace := maxLength(result.Secrets, func(secret infisical.Secret) int {
+				return len(secret.Workspace)
+			})
+			maxLenEnv := maxLength(result.Secrets, func(secret infisical.Secret) int {
+				return len(secret.Environment)
+			})
+			maxLenType := maxLength(result.Secrets, func(secret infisical.Secret) int {
+				return len(secret.Type)
+			})
+			format := fmt.Sprintf("%%%ds | %%%ds | %%%ds | %%s\n", maxLenWorkspace, maxLenEnv, maxLenType)
+
+			// print headers
+			fmt.Printf(format, "workspace", "env", "type", "path/key=value")
+			fmt.Printf("----\n")
+
+			// print key-values
 			for _, secret := range result.Secrets {
-				fmt.Printf("workspace: %s	| env: %s	| type: %s	| %s = %s\n", secret.Workspace, secret.Environment, secret.Type, path.Join(secret.SecretKey), secret.SecretValue)
+				fmt.Printf(format, secret.Workspace, secret.Environment, secret.Type, path.Join(folder, secret.SecretKey)+"="+secret.SecretValue)
 			}
 
 			os.Exit(0)
