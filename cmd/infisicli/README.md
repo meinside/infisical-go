@@ -44,14 +44,13 @@ and `e2ee` is whether the workspace's E2EE setting is enabled or not.
 {
   "workspaces": {
     "012345abcdefg": {
-      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop",
-      "e2ee": false
+      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop"
     }
   }
 }
 ```
 
-but in this case some features that require `api_key` will not function.
+but in this case some features that require `api_key` (eg. listing organizations, listing workspaces, …) will not function.
 
 ## Usage
 
@@ -71,7 +70,10 @@ List organizations info with:
 
 ```bash
 $ infisicli -lo
-org: your-org-name   | id: <your-org-id> (customer id: your-customer-id)
+
+           id | name
+----
+<your-org-id> | your-org-name
 ```
 
 ### List Workspaces
@@ -80,14 +82,18 @@ List workspaces with <your-org-id> obtained from above:
 
 ```bash
 $ infisicli -lw -o=<your-org-id>
-workspace: <workspace1-id>     | name: workspace1-name
- - env: dev     | name: Development, id: workspace1-dev-env-id
- - env: staging | name: Staging, id: workspace1-staging-env-id
- - env: prod    | name: Production, id: workspace1-prod-env-id
-workspace: <workspace2-id> | name: workspace2-name
- - env: dev     | name: Development, id: workspace2-dev-env-id
- - env: staging | name: Staging, id: workspace2-staging-env-id
- - env: prod    | name: Production, id: workspace2-prod-env-id
+
+   workspace id | name
+----
+<workspace1-id> | workspace1-name
+      dev | Development (workspace1-dev-env-id)
+  staging |     Staging (workspace1-staging-env-id)
+     prod |  Production (workspace1-prod-env-id)
+----
+<workspace2-id> | workspace2-name
+      dev | Development (workspace2-dev-env-id)
+  staging |     Staging (workspace2-staging-env-id)
+     prod |  Production (workspace2-prod-env-id)
 ...
 ```
 
@@ -97,8 +103,12 @@ Now list secrets at a folder:
 
 ```bash
 $ infisicli -las -w=<workspace1-id> -e=dev -f=/folder1/folder2
-workspace: <workspace1-id>     | env: dev      | type: <type1>  | <key1> = <value2>
-workspace: <workspace1-id>     | env: dev      | type: <type2>  | <key2> = <value2>
+
+      workspace | env |    type | path/key=value
+----
+<workspace1-id> | dev | <type1> | /folder1/folder2/<key1>=<value1>
+<workspace1-id> | dev | <type2> | /folder1/folder2/<key2>=<value2>
+...
 ```
 
 ### Print secret value
@@ -106,16 +116,17 @@ workspace: <workspace1-id>     | env: dev      | type: <type2>  | <key2> = <valu
 Following will print the value of given key-path (folder + key) without a trailing newline:
 
 ```bash
-$ infisicli -p -w=<workspace1-id> -e=dev -t=<type2> -k=/folder1/folder2/<value2>
-<value2>
+$ infisicli -p -w=<workspace1-id> -e=dev -t=<type1> -k=/folder1/folder2/<key1>
+
+<value1>
 ```
 
-It can be used in shell scripts like:
+It can also be used in shell scripts like:
 
 ```bash
-VALUE=$(infisicli -p -w=<workspace1-id> -e=dev -t=<type1> -k=/folder1/folder2/<value1>)
+VALUE=$(infisicli -p -w=<workspace1-id> -e=dev -t=<type1> -k=/folder1/folder2/<key1>)
 
-echo "value for key: <value1> = $VALUE"
+echo "value for key: <key1> = $VALUE"
 ```
 
 ## License
