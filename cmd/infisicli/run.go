@@ -280,22 +280,26 @@ func doListOrganizations(verbose bool) error {
 	return do(func(c *infisical.Client) error {
 		result, err := c.RetrieveOrganizations()
 		if err == nil {
-			// calculate max lengths for formatting
-			maxLenOrg := maxLength(result.Organizations, func(org infisical.Organization) int {
-				return len(org.Name)
-			})
-			maxLenID := maxLength(result.Organizations, func(org infisical.Organization) int {
-				return len(org.ID)
-			})
-			format := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenID, maxLenOrg)
+			if len(result.Organizations) > 0 {
+				// calculate max lengths for formatting
+				maxLenOrg := maxLength(result.Organizations, func(org infisical.Organization) int {
+					return len(org.Name)
+				})
+				maxLenID := maxLength(result.Organizations, func(org infisical.Organization) int {
+					return len(org.ID)
+				})
+				format := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenID, maxLenOrg)
 
-			// print headers
-			fmt.Printf(format, "org id", "name")
-			fmt.Printf("----\n")
+				// print headers
+				fmt.Printf(format, "org id", "name")
+				fmt.Printf("----\n")
 
-			// print organizations
-			for _, org := range result.Organizations {
-				fmt.Printf(format, org.ID, org.Name)
+				// print organizations
+				for _, org := range result.Organizations {
+					fmt.Printf(format, org.ID, org.Name)
+				}
+			} else {
+				fmt.Printf("* There was no organization for current configuration.\n")
 			}
 
 			os.Exit(0)
@@ -319,35 +323,39 @@ func doListWorkspaces(args []string, verbose bool) error {
 			workspaces, err = c.RetrieveProjects(org)
 
 			if err == nil {
-				// calculate max lengths for formatting
-				maxLenWorkspaceID := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
-					return len(workspace.ID)
-				})
-				maxLenWorkspaceName := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
-					return len(workspace.Name)
-				})
-				workspaceFormat := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenWorkspaceID, maxLenWorkspaceName)
-
-				// print headers
-				fmt.Printf(workspaceFormat, "workspace id", "name")
-
-				for _, workspace := range workspaces.Workspaces {
-					maxLenSlug := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
-						return len(env.Slug)
+				if len(workspaces.Workspaces) > 0 {
+					// calculate max lengths for formatting
+					maxLenWorkspaceID := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
+						return len(workspace.ID)
 					})
-					maxLenName := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
-						return len(env.Name)
+					maxLenWorkspaceName := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
+						return len(workspace.Name)
 					})
-					envFormat := fmt.Sprintf("  %%%ds | %%%ds (%%s)\n", maxLenSlug, maxLenName)
+					workspaceFormat := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenWorkspaceID, maxLenWorkspaceName)
 
-					// print workspace
-					fmt.Printf("----\n")
-					fmt.Printf(workspaceFormat, workspace.ID, workspace.Name)
+					// print headers
+					fmt.Printf(workspaceFormat, "workspace id", "name")
 
-					// print environments
-					for _, env := range workspace.Environments {
-						fmt.Printf(envFormat, env.Slug, env.Name, env.ID)
+					for _, workspace := range workspaces.Workspaces {
+						maxLenSlug := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
+							return len(env.Slug)
+						})
+						maxLenName := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
+							return len(env.Name)
+						})
+						envFormat := fmt.Sprintf("  %%%ds | %%%ds (%%s)\n", maxLenSlug, maxLenName)
+
+						// print workspace
+						fmt.Printf("----\n")
+						fmt.Printf(workspaceFormat, workspace.ID, workspace.Name)
+
+						// print environments
+						for _, env := range workspace.Environments {
+							fmt.Printf(envFormat, env.Slug, env.Name, env.ID)
+						}
 					}
+				} else {
+					fmt.Printf("* There was no workspace for organization: %s.\n", org)
 				}
 
 				os.Exit(0)
@@ -382,24 +390,28 @@ func doListAllSecrets(args []string, verbose bool) error {
 		result, err = c.RetrieveSecrets(workspace, environment, secretsParam)
 
 		if err == nil {
-			maxLenWorkspace := maxLength(result.Secrets, func(secret infisical.Secret) int {
-				return len(secret.Workspace)
-			})
-			maxLenEnv := maxLength(result.Secrets, func(secret infisical.Secret) int {
-				return len(secret.Environment)
-			})
-			maxLenType := maxLength(result.Secrets, func(secret infisical.Secret) int {
-				return len(secret.Type)
-			})
-			format := fmt.Sprintf("%%%ds | %%%ds | %%%ds | %%s\n", maxLenWorkspace, maxLenEnv, maxLenType)
+			if len(result.Secrets) > 0 {
+				maxLenWorkspace := maxLength(result.Secrets, func(secret infisical.Secret) int {
+					return len(secret.Workspace)
+				})
+				maxLenEnv := maxLength(result.Secrets, func(secret infisical.Secret) int {
+					return len(secret.Environment)
+				})
+				maxLenType := maxLength(result.Secrets, func(secret infisical.Secret) int {
+					return len(secret.Type)
+				})
+				format := fmt.Sprintf("%%%ds | %%%ds | %%%ds | %%s\n", maxLenWorkspace, maxLenEnv, maxLenType)
 
-			// print headers
-			fmt.Printf(format, "workspace", "env", "type", "path/key=value")
-			fmt.Printf("----\n")
+				// print headers
+				fmt.Printf(format, "workspace", "env", "type", "path/key=value")
+				fmt.Printf("----\n")
 
-			// print key-values
-			for _, secret := range result.Secrets {
-				fmt.Printf(format, secret.Workspace, secret.Environment, secret.Type, path.Join(folder, secret.SecretKey)+"="+secret.SecretValue)
+				// print key-values
+				for _, secret := range result.Secrets {
+					fmt.Printf(format, secret.Workspace, secret.Environment, secret.Type, path.Join(folder, secret.SecretKey)+"="+secret.SecretValue)
+				}
+			} else {
+				fmt.Printf("* There was no secret for given parameters.\n")
 			}
 
 			os.Exit(0)
