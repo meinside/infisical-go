@@ -290,7 +290,7 @@ func doListOrganizations(verbose bool) error {
 			format := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenID, maxLenOrg)
 
 			// print headers
-			fmt.Printf(format, "id", "name")
+			fmt.Printf(format, "org id", "name")
 			fmt.Printf("----\n")
 
 			// print organizations
