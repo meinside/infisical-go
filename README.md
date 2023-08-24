@@ -41,6 +41,7 @@ func main() {
 			E2EE:  e2ee,
 		},
 	})
+	//client.SetAPIBaseURL("https://app.infisical.com") // change API base URL (eg. for self-hosted infisical servers)
 	client.Verbose = verbose
 
 	// fetch all secrets at a path,
