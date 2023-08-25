@@ -154,8 +154,8 @@ Usage:
   : list all secret values in a given folder (default: /) to stdout. (only 'token' is needed when E2EE is disabled)
     eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev
     eg. %[1]s %[11]s %[25]s=012345abcdefg %[27]s=dev
-    eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev %[16]s=/folder1/folder2
-    eg. %[1]s %[11]s %[25]s=012345abcdefg %[27]s=dev %[17]s=/folder1/folder2
+    eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev %[22]s=/folder1/folder2
+    eg. %[1]s %[11]s %[25]s=012345abcdefg %[27]s=dev %[23]s=/folder1/folder2
 
   %[1]s %[12]s
   %[1]s %[13]s
