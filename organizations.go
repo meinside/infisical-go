@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// RetrieveProjects retrieves all projects for given organization id.
+// RetrieveProjects retrieves all workspaces for given organization id.
 //
 // https://infisical.com/docs/api-reference/endpoints/organizations/workspaces
 func (c *Client) RetrieveProjects(organizationID string) (result ProjectsData, err error) {
@@ -26,5 +26,5 @@ func (c *Client) RetrieveProjects(organizationID string) (result ProjectsData, e
 		}
 	}
 
-	return ProjectsData{}, fmt.Errorf("failed to retrieve projects: %s", err)
+	return ProjectsData{}, fmt.Errorf("failed to retrieve workspaces: %s", err)
 }

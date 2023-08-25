@@ -8,7 +8,7 @@ type WorkspaceToken struct {
 	E2EE  bool   `json:"e2ee"`
 }
 
-// type aliases
+// type aliases and helper functions
 
 type ParamsRetrieveSecrets map[string]any
 
