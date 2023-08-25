@@ -14,7 +14,7 @@ type Client struct {
 
 	baseURL string
 
-	Verbose bool // NOTE: set for dumping http requests & responses
+	Verbose bool // NOTE: set `true` for dumping http requests & responses
 }
 
 // NewClient creates a new client and return it.
@@ -44,7 +44,9 @@ func NewClientWithoutAPIKey(workspaceTokens map[string]WorkspaceToken) *Client {
 	}
 }
 
-// SetAPIBaseURL changes the `baseURL`. (eg. for using in self-hosted infisical server)
+// SetAPIBaseURL changes the `baseURL`.
+//
+// (eg. for using in self-hosted infisical servers)
 func (c *Client) SetAPIBaseURL(baseURL string) {
 	c.baseURL = baseURL
 }

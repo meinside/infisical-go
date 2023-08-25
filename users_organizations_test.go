@@ -32,12 +32,12 @@ func TestUsersAndOrganizations(t *testing.T) {
 		} else {
 			organizationID := organizations.Organizations[0].ID
 
-			// (retrieve projects)
+			// (retrieve workspaces)
 			if projects, err := client.RetrieveProjects(organizationID); err != nil {
-				t.Errorf("failed to retrieve projects: %s", err)
+				t.Errorf("failed to retrieve workspaces: %s", err)
 			} else {
 				if len(projects.Workspaces) <= 0 {
-					t.Errorf("there were no projects in organization with id: %s", organizationID)
+					t.Errorf("there were no workspaces in organization with id: %s", organizationID)
 				}
 			}
 		}

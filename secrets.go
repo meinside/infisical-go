@@ -147,11 +147,13 @@ func (c *Client) CreateSecret(workspaceID, environment, secretKey, secretValue s
 	c.dumpRequest(req)
 
 	var res *http.Response
-	res, err = c.httpClient.Do(req)
+	if res, err = c.httpClient.Do(req); err == nil {
+		c.dumpResponse(res)
 
-	c.dumpResponse(res)
+		return c.parseResponse(res, nil)
+	}
 
-	return c.parseResponse(res, nil)
+	return err
 }
 
 // RetrieveSecret retrieves a secret for given parameters.
@@ -295,11 +297,13 @@ func (c *Client) UpdateSecret(workspaceID, environment, secretKey, secretValue s
 	c.dumpRequest(req)
 
 	var res *http.Response
-	res, err = c.httpClient.Do(req)
+	if res, err = c.httpClient.Do(req); err == nil {
+		c.dumpResponse(res)
 
-	c.dumpResponse(res)
+		return c.parseResponse(res, nil)
+	}
 
-	return c.parseResponse(res, nil)
+	return err
 }
 
 // DeleteSecret deletes a secret for given parameters.

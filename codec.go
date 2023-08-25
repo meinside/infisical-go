@@ -15,10 +15,10 @@ const tagSize = 16 // default(?) gcmTagSize = 16
 
 // encrypt function for E2EE
 //
-// aesKey should be 32 bytes long (AES-256-GCM)
+// `aesKey` should be 32 bytes long (AES-256-GCM)
 func encrypt(aesKey, text []byte) (encrypted, nonce, authTag []byte, err error) {
 	if len(aesKey) != 32 {
-		return nil, nil, nil, fmt.Errorf("size of aes key is not 32 but %d, cannot encrypt given things", len(aesKey))
+		return nil, nil, nil, fmt.Errorf("the length of AES key is not 32 but %d, cannot encrypt with given things", len(aesKey))
 	}
 
 	var block cipher.Block
@@ -46,10 +46,10 @@ func encrypt(aesKey, text []byte) (encrypted, nonce, authTag []byte, err error) 
 
 // decrypt function for E2EE
 //
-// aesKey should be 32 bytes long (AES-256-GCM)
+// `aesKey` should be 32 bytes long (AES-256-GCM)
 func decrypt(aesKey, encrypted, nonce, authTag []byte) (decrypted []byte, err error) {
 	if len(aesKey) != 32 {
-		return nil, fmt.Errorf("size of aes key is not 32 but %d, cannot decrypt given things", len(aesKey))
+		return nil, fmt.Errorf("the length of AES key is not 32 but %d, cannot decrypt with given things", len(aesKey))
 	}
 
 	var block cipher.Block

@@ -45,6 +45,11 @@ func (c *Client) dumpResponse(req *http.Response) {
 	}
 }
 
+// requestURL returns a URL string for HTTP request with given path.
+func (c *Client) requestURL(path string) string {
+	return fmt.Sprintf("%s/api%s", c.baseURL, path)
+}
+
 // newRequestWithQueryParams creates a new http request with query strings.
 func (c *Client) newRequestWithQueryParams(method, path string, authMethod AuthMethod, token *WorkspaceToken, params map[string]any) (req *http.Request, err error) {
 	if authMethod&AuthMethodAPIKeyOnly != 0 && emptyString(c.apiKey) {
@@ -54,9 +59,7 @@ func (c *Client) newRequestWithQueryParams(method, path string, authMethod AuthM
 		return nil, fmt.Errorf("%s %s requires `token` that is missing, cannot generate a request", method, path)
 	}
 
-	url := fmt.Sprintf("%s/api%s", c.baseURL, path)
-
-	if req, err = http.NewRequest(method, url, nil); err == nil {
+	if req, err = http.NewRequest(method, c.requestURL(path), nil); err == nil {
 		// query parameters
 		q := req.URL.Query()
 		for k, v := range params {
@@ -109,9 +112,7 @@ func (c *Client) newRequestWithJSONBody(method, path string, authMethod AuthMeth
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/api%s", c.baseURL, path)
-
-	if req, err = http.NewRequest(method, url, bytes.NewReader(encoded)); err == nil {
+	if req, err = http.NewRequest(method, c.requestURL(path), bytes.NewReader(encoded)); err == nil {
 		req.Header.Set("Content-Type", "application/json")
 
 		// add headers for authorization
