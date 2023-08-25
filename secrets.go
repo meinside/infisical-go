@@ -151,7 +151,7 @@ func (c *Client) CreateSecret(workspaceID, environment, secretKey, secretValue s
 
 	c.dumpResponse(res)
 
-	return err
+	return c.parseResponse(res, nil)
 }
 
 // RetrieveSecret retrieves a secret for given parameters.
@@ -200,9 +200,6 @@ func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, para
 					// return as it is
 					return result, nil
 				}
-			}
-			if err = c.parseResponse(res, &result); err == nil {
-				return result, nil
 			}
 		}
 	}
@@ -302,7 +299,7 @@ func (c *Client) UpdateSecret(workspaceID, environment, secretKey, secretValue s
 
 	c.dumpResponse(res)
 
-	return err
+	return c.parseResponse(res, nil)
 }
 
 // DeleteSecret deletes a secret for given parameters.
