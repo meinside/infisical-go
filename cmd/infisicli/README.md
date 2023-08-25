@@ -4,8 +4,9 @@ Infisicli, a simple [Infisical](https://infisical.com/) CLI.
 
 ## Features
 
-- [X] List and view organizations, workspaces, and secrets.
-- [ ] Create/Update/Delete organizations, workspaces, and secrets.
+- [X] List organizations, workspaces, environments, and secrets.
+- [X] Create/Update/Delete secrets.
+- [ ] Create/Update/Delete organizations, workspaces, and environments.
 
 ## Install
 
@@ -111,7 +112,7 @@ $ infisicli -las -w=<workspace1-id> -e=dev -f=/folder1/folder2
 ...
 ```
 
-### Print secret value
+### Print a Secret Value
 
 Following will print the value of given key-path (folder + key) without a trailing newline:
 
@@ -127,6 +128,32 @@ It can also be used in shell scripts like:
 VALUE=$(infisicli -p -w=<workspace1-id> -e=dev -t=<type1> -k=/folder1/folder2/<key1>)
 
 echo "value for key: <key1> = $VALUE"
+```
+
+### Create/Update/Delete a Secret
+
+Create a new secret:
+
+```bash
+$ infisicli -n -w=<workspace1-id> -e=dev -t=shared -k=<path/key> -s=<new-value>
+
+> Successfully created a new secret value at: <path/key>
+```
+
+Update a secret value:
+
+```bash
+$ infisicli -u -w=<workspace1-id> -e=dev -t=shared -k=<path/key> -s=<updated-value>
+
+> Successfully updated a secret value at: <path/key>
+```
+
+Delete a secret:
+
+```bash
+$ infisicli -d -w=<workspace1-id> -e=dev -t=shared -k=<path/key>
+
+> Successfully deleted a secret value at: <path/key>
 ```
 
 ## License
