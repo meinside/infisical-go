@@ -12,6 +12,7 @@ import (
 
 	"github.com/meinside/infisical-go"
 	"github.com/meinside/version-go"
+	"github.com/tailscale/hujson"
 )
 
 const (
@@ -76,6 +77,17 @@ type config struct {
 	Workspaces map[string]infisical.WorkspaceToken `json:"workspaces"`
 }
 
+// standardize given JSON (JWCC) bytes
+func standardizeJSON(b []byte) ([]byte, error) {
+	ast, err := hujson.Parse(b)
+	if err != nil {
+		return b, err
+	}
+	ast.Standardize()
+
+	return ast.Pack(), nil
+}
+
 // load config file
 func loadConfig() (conf config, err error) {
 	// https://xdgbasedirectoryspecification.com
@@ -96,8 +108,10 @@ func loadConfig() (conf config, err error) {
 
 		var bytes []byte
 		if bytes, err = os.ReadFile(configFilepath); err == nil {
-			if err = json.Unmarshal(bytes, &conf); err == nil {
-				return conf, nil
+			if bytes, err = standardizeJSON(bytes); err == nil {
+				if err = json.Unmarshal(bytes, &conf); err == nil {
+					return conf, nil
+				}
 			}
 		}
 	}
