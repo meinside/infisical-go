@@ -20,13 +20,17 @@ Put a `config.json` file in `$XDG_CONFIG_HOME/infisicli/` directory with followi
 
 ```json
 {
+  // Infisical API Key
   "api_key": "ak.1234567890.abcdefghijk",
+
+  // Workspaces
   "workspaces": {
+    // ID of workspace
     "012345abcdefg": {
-      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop",
-      "e2ee": true
-    }
-  }
+      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop", // Workspace's Token
+      "e2ee": true, // E2EE setting is enabled or not
+    },
+  },
 }
 ```
 
@@ -43,11 +47,13 @@ and `e2ee` is whether the workspace's E2EE setting is enabled or not.
 
 ```json
 {
+  // Workspaces
   "workspaces": {
+    // ID of workspace
     "012345abcdefg": {
-      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop"
-    }
-  }
+      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop", // Workspace's Token
+    },
+  },
 }
 ```
 
