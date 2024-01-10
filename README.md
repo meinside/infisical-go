@@ -205,7 +205,3 @@ $ go test
 
 I built a [CLI](https://github.com/meinside/infisical-go/tree/master/cmd/infisicli) for testing and personal use.
 
-## License
-
-MIT
-
