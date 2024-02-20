@@ -87,6 +87,16 @@ func (c *Client) projectKey(token WorkspaceToken) (projectKey []byte, err error)
 		return nil, err
 	}
 
+	if serviceToken.EncryptedKey == nil {
+		return nil, fmt.Errorf("returned service token's encrypted key is nil")
+	}
+	if serviceToken.IV == nil {
+		return nil, fmt.Errorf("returned service token's IV is nil")
+	}
+	if serviceToken.Tag == nil {
+		return nil, fmt.Errorf("returned service token's tag is nil")
+	}
+
 	if token.Token == "" {
 		return nil, fmt.Errorf("`token` is missing, cannot decrypt project key")
 	}
@@ -96,13 +106,13 @@ func (c *Client) projectKey(token WorkspaceToken) (projectKey []byte, err error)
 
 	// decrypt things
 	var decodedEncryptedKey, decodedIV, decodedTag []byte
-	if decodedEncryptedKey, err = decodeBase64(serviceToken.EncryptedKey); err != nil {
+	if decodedEncryptedKey, err = decodeBase64(*serviceToken.EncryptedKey); err != nil {
 		return nil, err
 	}
-	if decodedIV, err = decodeBase64(serviceToken.IV); err != nil {
+	if decodedIV, err = decodeBase64(*serviceToken.IV); err != nil {
 		return nil, err
 	}
-	if decodedTag, err = decodeBase64(serviceToken.Tag); err != nil {
+	if decodedTag, err = decodeBase64(*serviceToken.Tag); err != nil {
 		return nil, err
 	}
 	if projectKey, err = decrypt([]byte(serviceTokenSecret), decodedEncryptedKey, decodedIV, decodedTag); err != nil {
