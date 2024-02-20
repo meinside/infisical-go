@@ -8,16 +8,18 @@ import (
 func TestUsersAndOrganizations(t *testing.T) {
 	////////////////////////////////
 	// read values from environment variables
-	var apiKey, verbose string
+	var apiKey, clientID, clientSecret, verbose string
 	apiKey = os.Getenv("INFISICAL_API_KEY")
+	clientID = os.Getenv("INFISICAL_CLIENT_ID")
+	clientSecret = os.Getenv("INFISICAL_CLIENT_SECRET")
 	verbose = os.Getenv("VERBOSE") // NOTE: "true" or not
 
 	////////////////////////////////
 	// initialize client
-	if apiKey == "" {
-		t.Fatalf("no environment variable: `INFISICAL_API_KEY` was found.")
+	if apiKey == "" || clientID == "" || clientSecret == "" {
+		t.Fatalf("no environment variables: `INFISICAL_API_KEY`, `INFISICAL_CLIENT_ID`, or `INFISICAL_CLIENT_SECRET` were found.")
 	}
-	client := NewClient(apiKey, nil)
+	client := NewClient(apiKey, clientID, clientSecret)
 	client.Verbose = (verbose == "true")
 
 	////////////////////////////////

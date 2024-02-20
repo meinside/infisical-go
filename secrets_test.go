@@ -5,51 +5,46 @@ import (
 	"testing"
 )
 
-const (
-	secretType           = SecretTypeShared
-	secretKey            = "new_secret_key"
-	secretValue          = "newly_created_secret_value"
-	secretComment        = "newly_created_secret_comment"
-	secretValueUpdated   = "updated_secret_value"
-	secretCommentUpdated = "updated_secret_comment"
-)
-
 func TestSecrets(t *testing.T) {
 	////////////////////////////////
 	// read values from environment variables
 	apiKey := os.Getenv("INFISICAL_API_KEY")
 	workspaceID := os.Getenv("INFISICAL_WORKSPACE_ID")
-	token := os.Getenv("INFISICAL_TOKEN")
-	e2ee := os.Getenv("INFISICAL_E2EE") // NOTE: "enabled" or not
+	clientID := os.Getenv("INFISICAL_CLIENT_ID")
+	clientSecret := os.Getenv("INFISICAL_CLIENT_SECRET")
 	environment := os.Getenv("INFISICAL_ENVIRONMENT")
 	verbose := os.Getenv("VERBOSE") // NOTE: "true" or not
 
 	////////////////////////////////
 	// initialize client
-	if apiKey == "" || token == "" || workspaceID == "" || environment == "" {
-		t.Fatalf("no environment variables: `INFISICAL_API_KEY`, `INFISICAL_TOKEN`, `INFISICAL_WORKSPACE_ID`, or `INFISICAL_ENVIRONMENT` were found.")
+	if apiKey == "" || clientID == "" || clientSecret == "" || workspaceID == "" || environment == "" {
+		t.Fatalf("no environment variables: `INFISICAL_API_KEY`, `INFISICAL_CLIENT_ID`, `INFISICAL_CLIENT_SECRET`, `INFISICAL_WORKSPACE_ID`, or `INFISICAL_ENVIRONMENT` were found.")
 	}
-	client := NewClient(apiKey, map[string]WorkspaceToken{
-		workspaceID: {
-			Token: token,
-			E2EE:  (e2ee == "enabled"),
-		},
-	})
+	client := NewClient(apiKey, clientID, clientSecret)
 	client.Verbose = (verbose == "true")
 
 	////////////////////////////////
 	// test api functions
 
-	// (retrieve all secrets)
+	// (list secrets)
 	var initialNumSecrets int
-	if secrets, err := client.RetrieveSecrets(
-		workspaceID,
-		environment,
-		NewParamsRetrieveSecrets(),
+	if secrets, err := client.ListSecrets(
+		NewParamsListSecrets().
+			SetWorkspaceID(workspaceID).
+			SetEnvironment(environment),
 	); err != nil {
-		t.Errorf("failed to retrieve secrets: %s", err)
+		t.Errorf("failed to list secrets: %s", err)
 	} else {
 		initialNumSecrets = len(secrets.Secrets)
+
+		const (
+			secretType           = SecretTypeShared
+			secretKey            = "new_secret_key"
+			secretValue          = "newly_created_secret_value"
+			secretComment        = "newly_created_secret_comment"
+			secretValueUpdated   = "updated_secret_value"
+			secretCommentUpdated = "updated_secret_comment"
+		)
 
 		// (create a secret)
 		if err := client.CreateSecret(
@@ -118,13 +113,13 @@ func TestSecrets(t *testing.T) {
 			}
 		}
 
-		// (retrieve all secrets)
-		if secrets, err := client.RetrieveSecrets(
-			workspaceID,
-			environment,
-			NewParamsRetrieveSecrets(),
+		// (list secrets)
+		if secrets, err := client.ListSecrets(
+			NewParamsListSecrets().
+				SetWorkspaceID(workspaceID).
+				SetEnvironment(environment),
 		); err != nil {
-			t.Errorf("failed to retrieve secrets: %s", err)
+			t.Errorf("failed to list secrets: %s", err)
 		} else {
 			if len(secrets.Secrets) != initialNumSecrets {
 				t.Errorf("the number of remaining secrets: %d is not equal to the initial count: %d", len(secrets.Secrets), initialNumSecrets)
