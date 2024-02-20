@@ -126,19 +126,34 @@ func (p ParamsDeleteSecret) SetType(typ SecretType) ParamsDeleteSecret {
 
 // ServiceToken struct
 type ServiceToken struct {
-	ID           string `json:"_id"`
-	CreatedAt    string `json:"createdAt"`
-	EncryptedKey string `json:"encryptedKey"`
-	Environment  string `json:"environment"`
-	ExpiresAt    string `json:"expiresAt"`
-	IV           string `json:"iv"`
-	Name         string `json:"name"`
-	Tag          string `json:"tag"`
-	UpdatedAt    string `json:"updatedAt"`
+	V__          int      `json:"__v,omitempty"`
+	ID_          string   `json:"_id"`
+	CreatedAt    string   `json:"createdAt"`
+	CreatedBy    string   `json:"createdBy"`
+	EncryptedKey *string  `json:"encryptedKey,omitempty"`
+	ExpiresAt    *string  `json:"expiresAt,omitempty"`
+	ID           string   `json:"id"`
+	IV           *string  `json:"iv,omitempty"`
+	LastUsed     *string  `json:"lastUsed,omitempty"`
+	Name         string   `json:"name"`
+	Permissions  []string `json:"permissions"`
+	ProjectID    string   `json:"projectId"`
+	Scopes       any      `json:"scopes,omitempty"`
+	SecretHash   string   `json:"secretHash"`
+	Tag          *string  `json:"tag,omitempty"`
+	UpdatedAt    string   `json:"updatedAt"`
 	User         struct {
-		ID        string `json:"_id"`
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
+		V__         int      `json:"__v,omitempty"`
+		ID_         string   `json:"_id"`
+		AuthMethods []string `json:"authMethods"`
+		CreatedAt   string   `json:"createdAt"`
+		Devices     any      `json:"devices,omitempty"`
+		Email       string   `json:"email"`
+		FirstName   *string  `json:"firstName,omitempty"`
+		ID          string   `json:"id"`
+		LastName    *string  `json:"lastName,omitempty"`
+		MFAMethods  []string `json:"mfaMethods,omitempty"`
+		UpdatedAt   string   `json:"updatedAt"`
 	} `json:"user"`
 	Workspace string `json:"workspace"`
 }
@@ -163,11 +178,13 @@ type SecretData struct {
 
 // Secret struct for one secret
 type Secret struct {
-	ID                      string     `json:"_id"`
-	Version                 int        `json:"version"`
-	Workspace               string     `json:"workspace"`
-	Type                    SecretType `json:"type"`
+	ID_                     string     `json:"_id"`
 	Environment             string     `json:"environment"`
+	ID                      string     `json:"id"`
+	SecretComment           string     `json:"secretComment,omitempty"`
+	SecretCommentCiphertext string     `json:"secretCommentCiphertext,omitempty"`
+	SecretCommentIV         string     `json:"secretCommentIV,omitempty"`
+	SecretCommentTag        string     `json:"secretCommentTag,omitempty"`
 	SecretKey               string     `json:"secretKey,omitempty"`
 	SecretKeyCiphertext     string     `json:"secretKeyCiphertext,omitempty"`
 	SecretKeyIV             string     `json:"secretKeyIV,omitempty"`
@@ -176,10 +193,9 @@ type Secret struct {
 	SecretValueCiphertext   string     `json:"secretValueCiphertext,omitempty"`
 	SecretValueIV           string     `json:"secretValueIV,omitempty"`
 	SecretValueTag          string     `json:"secretValueTag,omitempty"`
-	SecretComment           string     `json:"secretComment,omitempty"`
-	SecretCommentCiphertext string     `json:"secretCommentCiphertext,omitempty"`
-	SecretCommentIV         string     `json:"secretCommentIV,omitempty"`
-	SecretCommentTag        string     `json:"secretCommentTag,omitempty"`
+	Type                    SecretType `json:"type"`
+	Version                 int        `json:"version"`
+	Workspace               string     `json:"workspace"`
 }
 
 // OrganizationsData struct for organizations response
@@ -188,10 +204,18 @@ type OrganizationsData struct {
 }
 
 // Organization struct for one organization
+//
+// (DEPRECATED)
+//
+// https://infisical.com/docs/api-reference/endpoints/users/my-organizations
 type Organization struct {
-	ID         string `json:"_id"`
-	CustomerID string `json:"customerId"`
-	Name       string `json:"name"`
+	AuthEnforced bool   `json:"authEnforced"`
+	CreatedAt    string `json:"createdAt"`
+	CustomerID   string `json:"customerId"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Slug         string `json:"slug"`
+	UpdatedAt    string `json:"updatedAt"`
 }
 
 // ProjectsData struct for projects response
@@ -201,16 +225,14 @@ type ProjectsData struct {
 
 // Workspace struct for project
 type Workspace struct {
-	ID                 string                 `json:"_id"`
-	Name               string                 `json:"name"`
-	Organization       string                 `json:"organization"`
-	Environments       []WorkspaceEnvironment `json:"environments"`
-	AutoCapitalization bool                   `json:"autoCapitalization"`
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Organization string                 `json:"organization"`
+	Environments []WorkspaceEnvironment `json:"environments"`
 }
 
 // WorkspaceEnvironment struct for environments
 type WorkspaceEnvironment struct {
-	ID   string `json:"_id"`
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }

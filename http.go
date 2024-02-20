@@ -147,16 +147,18 @@ func (c *Client) newRequestWithJSONBody(method, path string, authMethod AuthMeth
 
 // parse response into given interface
 func (c *Client) parseResponse(res *http.Response, into any) (err error) {
-	var body []byte
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
 	if res.StatusCode == 200 {
 		if into != nil {
-			if body, err = io.ReadAll(res.Body); err == nil {
-				return json.Unmarshal(body, &into)
-			}
+			return json.NewDecoder(res.Body).Decode(&into)
 		} else {
 			return nil
 		}
 	} else {
+		var body []byte
 		if body, err = io.ReadAll(res.Body); err == nil {
 			err = fmt.Errorf("%s: `%s`", httpStatusToErr(res.StatusCode), string(body))
 		} else {

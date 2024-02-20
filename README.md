@@ -205,3 +205,7 @@ $ go test
 
 I built a [CLI](https://github.com/meinside/infisical-go/tree/master/cmd/infisicli) for testing and personal use.
 
+## Known Issues / Todos
+
+Some endpoints will be deprecated in the near future, should apply [identities](https://infisical.com/docs/documentation/platform/identities/overview).
+

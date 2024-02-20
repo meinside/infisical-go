@@ -401,7 +401,7 @@ func doListWorkspaces(args []string, verbose bool) error {
 						maxLenName := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
 							return len(env.Name)
 						})
-						envFormat := fmt.Sprintf("  %%%ds | %%%ds (%%s)\n", maxLenSlug, maxLenName)
+						envFormat := fmt.Sprintf("  %%%ds | %%%ds\n", maxLenSlug, maxLenName)
 
 						// print workspace
 						fmt.Printf("----\n")
@@ -409,7 +409,7 @@ func doListWorkspaces(args []string, verbose bool) error {
 
 						// print environments
 						for _, env := range workspace.Environments {
-							fmt.Printf(envFormat, env.Slug, env.Name, env.ID)
+							fmt.Printf(envFormat, env.Slug, env.Name)
 						}
 					}
 				} else {
