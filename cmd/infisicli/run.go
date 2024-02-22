@@ -542,11 +542,13 @@ func doListAllSecrets(args []string, verbose bool) error {
 		var err error
 		params := convertKeyValueParams(args)
 
-		var workspace string
+		var workspace, environment string
 		if workspace, err = valueFromKVs(argWorkspaceShort, argWorkspaceLong, params); err != nil {
 			return err
 		}
-		environment, _ := valueFromKVs(argEnvironmentShort, argEnvironmentLong, params)
+		if environment, err = valueFromKVs(argEnvironmentShort, argEnvironmentLong, params); err != nil {
+			return err
+		}
 
 		var result infisical.SecretsData
 		listParams := infisical.NewParamsListSecrets().
