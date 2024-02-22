@@ -7,8 +7,14 @@ import (
 
 // Client struct
 type Client struct {
-	apiKey          *string
-	workspaceTokens map[string]WorkspaceToken
+	// API Key (optional)
+	apiKey *string
+
+	// universal-auth token
+	clientID       string
+	clientSecret   string
+	token          *UniversalAuthToken
+	tokenExpiresOn time.Time
 
 	httpClient *http.Client
 
@@ -18,10 +24,12 @@ type Client struct {
 }
 
 // NewClient creates a new client and return it.
-func NewClient(apiKey string, workspaceTokens map[string]WorkspaceToken) *Client {
+func NewClient(apiKey, clientID, clientSecret string) *Client {
 	return &Client{
-		apiKey:          &apiKey,
-		workspaceTokens: workspaceTokens,
+		apiKey: &apiKey,
+
+		clientID:     clientID,
+		clientSecret: clientSecret,
 
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
@@ -31,10 +39,11 @@ func NewClient(apiKey string, workspaceTokens map[string]WorkspaceToken) *Client
 	}
 }
 
-// NewClientWithoutAPIKey creates a new client only with tokens and return it.
-func NewClientWithoutAPIKey(workspaceTokens map[string]WorkspaceToken) *Client {
+// NewClientWithoutAPIKey creates and returns a new client only with tokens.
+func NewClientWithoutAPIKey(clientID, clientSecret string) *Client {
 	return &Client{
-		workspaceTokens: workspaceTokens,
+		clientID:     clientID,
+		clientSecret: clientSecret,
 
 		httpClient: &http.Client{
 			Timeout: TimeoutSeconds * time.Second,
@@ -49,4 +58,17 @@ func NewClientWithoutAPIKey(workspaceTokens map[string]WorkspaceToken) *Client {
 // (eg. for using in self-hosted infisical servers)
 func (c *Client) SetAPIBaseURL(baseURL string) {
 	c.baseURL = baseURL
+}
+
+// get token, retrieve/refresh it if needed
+func (c *Client) getToken() (token *UniversalAuthToken, err error) {
+	if c.token == nil {
+		_, err = c.login()
+	} else {
+		if time.Now().After(c.tokenExpiresOn) {
+			_, err = c.refresh()
+		}
+	}
+
+	return c.token, err
 }

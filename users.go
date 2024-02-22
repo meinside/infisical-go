@@ -7,12 +7,14 @@ import (
 
 // RetrieveOrganizations retrieves all my organizations.
 //
+// (DEPRECATED)
+//
 // https://infisical.com/docs/api-reference/endpoints/users/my-organizations
 func (c *Client) RetrieveOrganizations() (result OrganizationsData, err error) {
 	path := "/v2/users/me/organizations"
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKeyOnly, nil, nil)
+	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodAPIKeyOnly, nil)
 	if err == nil {
 		c.dumpRequest(req)
 

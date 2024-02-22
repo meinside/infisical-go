@@ -70,11 +70,11 @@ const (
 // config struct
 type config struct {
 	// Infisical Account's API Key
-	APIKey string `json:"api_key,omitempty"`
+	APIKey *string `json:"api_key,omitempty"`
 
-	// key = worksace ID
-	// value = workspace token
-	Workspaces map[string]infisical.WorkspaceToken `json:"workspaces"`
+	// Universal Auth values
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
 }
 
 // standardize given JSON (JWCC) bytes
@@ -155,17 +155,20 @@ Usage:
 
   %[1]s %[6]s
   %[1]s %[7]s
-  : list all your organizations to stdout. (needed: 'api_key' and 'token')
+  : list all your organizations to stdout. ('api_key' needed)
 
   %[1]s %[8]s
   %[1]s %[9]s
-  : list all your workspaces to stdout. (needed: 'api_key' and 'token')
+  : list all your workspaces(iterating all org ids) to stdout. ('api_key' needed)
+    eg. %[1]s %[8]s
+    eg. %[1]s %[9]s
+  : list all your workspaces with given org id to stdout. ('api_key' needed)
     eg. %[1]s %[8]s %[20]s=0a1b2c3d4e5f
     eg. %[1]s %[9]s %[21]s=0a1b2c3d4e5f
 
   %[1]s %[10]s
   %[1]s %[11]s
-  : list all secret values in a given folder (default: /) to stdout. (only 'token' is needed when E2EE is disabled)
+  : list all secret values to stdout.
     eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev
     eg. %[1]s %[11]s %[25]s=012345abcdefg %[27]s=dev
     eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev %[22]s=/folder1/folder2
@@ -173,7 +176,7 @@ Usage:
 
   %[1]s %[12]s
   %[1]s %[13]s
-  : print the secret value to stdout without a trailing newline. (only 'token' is needed when E2EE is disabled)
+  : print the secret value to stdout without a trailing newline.
     eg. %[1]s %[12]s %[24]s=012345abcdefg %[26]s=dev %[28]s=shared %[30]s=/folder/SECRET_KEY_1
     eg. %[1]s %[13]s %[25]s=012345abcdefg %[27]s=dev %[29]s=shared %[31]s=/folder/SECRET_KEY_1
 
@@ -320,10 +323,10 @@ func do(fn func(c *infisical.Client) error, verbose bool) error {
 
 	if err == nil {
 		var client *infisical.Client
-		if cfg.APIKey != "" {
-			client = infisical.NewClient(cfg.APIKey, cfg.Workspaces)
+		if cfg.APIKey != nil {
+			client = infisical.NewClient(*cfg.APIKey, cfg.ClientID, cfg.ClientSecret)
 		} else {
-			client = infisical.NewClientWithoutAPIKey(cfg.Workspaces)
+			client = infisical.NewClientWithoutAPIKey(cfg.ClientID, cfg.ClientSecret)
 		}
 		client.Verbose = verbose
 
@@ -370,31 +373,56 @@ func doListOrganizations(verbose bool) error {
 // list workspaces, will os.Exit(0) on success
 func doListWorkspaces(args []string, verbose bool) error {
 	return do(func(c *infisical.Client) error {
+		orgs := []string{}
+
 		var err error
 		params := convertKeyValueParams(args)
-
-		var org string
-		org, err = valueFromKVs(argOrganizationShort, argOrganizationLong, params)
+		if org, _ := valueFromKVs(argOrganizationShort, argOrganizationLong, params); org != "" {
+			orgs = append(orgs, org)
+		} else {
+			// if org id is not given, iterate all
+			var result infisical.OrganizationsData
+			if result, err = c.RetrieveOrganizations(); err == nil {
+				for _, org := range result.Organizations {
+					orgs = append(orgs, org.ID)
+				}
+			}
+		}
 
 		if err == nil {
-			var workspaces infisical.ProjectsData
-			workspaces, err = c.RetrieveProjects(org)
+			allWorkspaces := []infisical.Workspace{}
 
+			// fetch things
+			for _, org := range orgs {
+				var workspaces infisical.ProjectsData
+				if workspaces, err = c.RetrieveProjects(org); err == nil {
+					allWorkspaces = append(allWorkspaces, workspaces.Workspaces...)
+				} else {
+					break
+				}
+			}
+
+			// print result
 			if err == nil {
-				if len(workspaces.Workspaces) > 0 {
+				if len(allWorkspaces) <= 0 {
+					fmt.Printf("* There was no workspace for given parameters.\n")
+				} else {
 					// calculate max lengths for formatting
-					maxLenWorkspaceID := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
+					maxLenOrgID := maxLength(allWorkspaces, func(workspace infisical.Workspace) int {
+						return len(workspace.Organization)
+					})
+					maxLenWorkspaceID := maxLength(allWorkspaces, func(workspace infisical.Workspace) int {
 						return len(workspace.ID)
 					})
-					maxLenWorkspaceName := maxLength(workspaces.Workspaces, func(workspace infisical.Workspace) int {
+					maxLenWorkspaceName := maxLength(allWorkspaces, func(workspace infisical.Workspace) int {
 						return len(workspace.Name)
 					})
-					workspaceFormat := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenWorkspaceID, maxLenWorkspaceName)
+					workspaceFormat := fmt.Sprintf("%%%ds | %%%ds | %%-%ds\n", maxLenOrgID, maxLenWorkspaceID, maxLenWorkspaceName)
 
 					// print headers
-					fmt.Printf(workspaceFormat, "workspace id", "name")
+					fmt.Printf(workspaceFormat, "org id", "workspace id", "workspace name")
 
-					for _, workspace := range workspaces.Workspaces {
+					for _, workspace := range allWorkspaces {
 						maxLenSlug := maxLength(workspace.Environments, func(env infisical.WorkspaceEnvironment) int {
 							return len(env.Slug)
 						})
@@ -405,15 +433,13 @@ func doListWorkspaces(args []string, verbose bool) error {
 
 						// print workspace
 						fmt.Printf("----\n")
-						fmt.Printf(workspaceFormat, workspace.ID, workspace.Name)
+						fmt.Printf(workspaceFormat, workspace.Organization, workspace.ID, workspace.Name)
 
 						// print environments
 						for _, env := range workspace.Environments {
 							fmt.Printf(envFormat, env.Slug, env.Name)
 						}
 					}
-				} else {
-					fmt.Printf("* There was no workspace for organization: %s.\n", org)
 				}
 
 				os.Exit(0)
@@ -424,54 +450,155 @@ func doListWorkspaces(args []string, verbose bool) error {
 	}, verbose)
 }
 
+// fetch folder paths in `folderPath` recursively
+func fetchFolderPaths(c *infisical.Client, workspace, environment string, folderPath *string) (folderPaths []string, err error) {
+	var dir string
+	if folderPath == nil {
+		dir = "/"
+	} else {
+		dir = *folderPath
+	}
+
+	params := infisical.NewParamsListFolders().
+		SetPath(dir)
+
+	var subdir string
+	var result infisical.FoldersData
+	if result, err = c.ListFolders(workspace, environment, params); err == nil {
+		for _, folder := range result.Folders {
+			subdir = path.Join(dir, folder.Name)
+
+			folderPaths = append(folderPaths, subdir)
+		}
+
+		// recurse subfolder paths
+		for _, folder := range result.Folders {
+			subdir = path.Join(dir, folder.Name)
+
+			var subFolderPaths []string
+			if subFolderPaths, err = fetchFolderPaths(c, workspace, environment, &subdir); err == nil {
+				folderPaths = append(folderPaths, subFolderPaths...)
+			} else {
+				break
+			}
+		}
+	}
+
+	return folderPaths, err
+}
+
+// print secrets to stdout
+func printSecrets(all []infisical.Secret, secrets []infisical.Secret, imports []infisical.SecretImport, foldersMap map[string]string) {
+	maxLenWorkspace := maxLength(all, func(secret infisical.Secret) int {
+		return len(secret.Workspace)
+	})
+	maxLenEnv := maxLength(all, func(secret infisical.Secret) int {
+		return len(secret.Environment)
+	})
+	maxLenType := maxLength(all, func(secret infisical.Secret) int {
+		return len(secret.Type)
+	})
+	format := fmt.Sprintf("%%%ds | %%%ds | %%%ds | %%s\n", maxLenWorkspace, maxLenEnv, maxLenType)
+
+	// print headers
+	fmt.Printf(format, "workspace", "env", "type", "path/key=value")
+	fmt.Printf("----\n")
+
+	var folder string
+	var exists bool
+
+	// print key-values
+	for _, secret := range secrets {
+		if folder, exists = foldersMap[secret.ID]; exists {
+			fmt.Printf(format,
+				secret.Workspace,
+				secret.Environment,
+				secret.Type,
+				path.Join(folder, secret.SecretKey)+"="+secret.SecretValue,
+			)
+		}
+	}
+	if len(imports) > 0 {
+		fmt.Printf("<imported>\n")
+
+		for _, imp := range imports {
+			for _, secret := range imp.Secrets {
+				if folder, exists = foldersMap[secret.ID]; exists {
+					fmt.Printf(format,
+						secret.Workspace,
+						secret.Environment,
+						secret.Type,
+						path.Join(folder, secret.SecretKey)+"="+secret.SecretValue,
+					)
+				}
+			}
+		}
+	}
+}
+
 // list all secrets, will os.Exit(0) on success
 func doListAllSecrets(args []string, verbose bool) error {
 	return do(func(c *infisical.Client) error {
 		var err error
 		params := convertKeyValueParams(args)
 
-		var workspace, environment string
+		var workspace string
 		if workspace, err = valueFromKVs(argWorkspaceShort, argWorkspaceLong, params); err != nil {
 			return err
 		}
-		if environment, err = valueFromKVs(argEnvironmentShort, argEnvironmentLong, params); err != nil {
-			return err
-		}
-		folder, _ := valueFromKVs(argFolderShort, argFolderLong, params)
-
-		secretsParam := infisical.NewParamsRetrieveSecrets()
-		if folder != "" {
-			secretsParam.SetSecretPath(folder)
-		}
+		environment, _ := valueFromKVs(argEnvironmentShort, argEnvironmentLong, params)
 
 		var result infisical.SecretsData
-		result, err = c.RetrieveSecrets(workspace, environment, secretsParam)
+		listParams := infisical.NewParamsListSecrets().
+			SetIncludeImports(true).
+			SetWorkspaceID(workspace).
+			SetEnvironment(environment)
+
+		// folder
+		folder, _ := valueFromKVs(argFolderShort, argFolderLong, params)
+		var allFolderPaths []string
+		if folder != "" {
+			allFolderPaths = []string{folder}
+		} else { // if folder is not given, iterate all folders
+			folderPaths, _ := fetchFolderPaths(c, workspace, environment, nil)
+
+			allFolderPaths = append([]string{"/"}, folderPaths...)
+		}
+
+		// and fetch all secrets from them
+		all := []infisical.Secret{}
+		news := []infisical.Secret{}
+		secrets := []infisical.Secret{}
+		imports := []infisical.SecretImport{}
+		foldersMap := map[string]string{}
+		for _, folderPath := range allFolderPaths {
+			listParams = listParams.
+				SetSecretPath(folderPath)
+
+			// fetch secrets
+			if result, err = c.ListSecrets(listParams); err == nil {
+				news = result.Secrets
+				for _, imp := range result.Imports {
+					news = append(news, imp.Secrets...)
+				}
+
+				secrets = append(secrets, result.Secrets...)
+				imports = append(imports, result.Imports...)
+				all = append(all, news...)
+
+				for _, secret := range news {
+					foldersMap[secret.ID] = folderPath
+				}
+			}
+		}
+
+		if len(all) > 0 {
+			printSecrets(all, secrets, imports, foldersMap)
+		} else {
+			fmt.Printf("* There was no secret for given parameters.\n")
+		}
 
 		if err == nil {
-			if len(result.Secrets) > 0 {
-				maxLenWorkspace := maxLength(result.Secrets, func(secret infisical.Secret) int {
-					return len(secret.Workspace)
-				})
-				maxLenEnv := maxLength(result.Secrets, func(secret infisical.Secret) int {
-					return len(secret.Environment)
-				})
-				maxLenType := maxLength(result.Secrets, func(secret infisical.Secret) int {
-					return len(secret.Type)
-				})
-				format := fmt.Sprintf("%%%ds | %%%ds | %%%ds | %%s\n", maxLenWorkspace, maxLenEnv, maxLenType)
-
-				// print headers
-				fmt.Printf(format, "workspace", "env", "type", "path/key=value")
-				fmt.Printf("----\n")
-
-				// print key-values
-				for _, secret := range result.Secrets {
-					fmt.Printf(format, secret.Workspace, secret.Environment, secret.Type, path.Join(folder, secret.SecretKey)+"="+secret.SecretValue)
-				}
-			} else {
-				fmt.Printf("* There was no secret for given parameters.\n")
-			}
-
 			os.Exit(0)
 		}
 

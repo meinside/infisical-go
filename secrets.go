@@ -6,33 +6,76 @@ import (
 	"strings"
 )
 
-// RetrieveSecrets retrieves secrets for given parameters.
+// SecretType type and constants
+type SecretType string
+
+const (
+	SecretTypeShared   SecretType = "shared"
+	SecretTypePersonal SecretType = "personal"
+)
+
+type SecretImport struct {
+	Environment string   `json:"environment"`
+	FolderID    *string  `json:"folderId,omitempty"`
+	SecretPath  string   `json:"secretPath"`
+	Secrets     []Secret `json:"secrets"`
+}
+
+// Secret struct for one secret
+type Secret struct {
+	ID_           string     `json:"_id"`
+	Environment   string     `json:"environment"`
+	ID            string     `json:"id"`
+	SecretComment *string    `json:"secretComment,omitempty"`
+	SecretKey     string     `json:"secretKey"`
+	SecretValue   string     `json:"secretValue"`
+	Type          SecretType `json:"type"`
+	Version       int        `json:"version"`
+	Workspace     string     `json:"workspace"`
+}
+
+type ParamsListSecrets map[string]any
+
+func NewParamsListSecrets() ParamsListSecrets {
+	return ParamsListSecrets{}
+}
+
+func (p ParamsListSecrets) SetWorkspaceID(workspaceID string) ParamsListSecrets {
+	p["workspaceId"] = workspaceID
+	return p
+}
+
+func (p ParamsListSecrets) SetEnvironment(environment string) ParamsListSecrets {
+	p["environment"] = environment
+	return p
+}
+
+func (p ParamsListSecrets) SetSecretPath(secretPath string) ParamsListSecrets {
+	p["secretPath"] = secretPath
+	return p
+}
+
+func (p ParamsListSecrets) SetIncludeImports(includeImports bool) ParamsListSecrets {
+	p["include_imports"] = includeImports
+	return p
+}
+
+// SecretsData struct for secrets response
+type SecretsData struct {
+	Imports []SecretImport `json:"imports"`
+	Secrets []Secret       `json:"secrets"`
+}
+
+// ListSecrets lists all secrets for given parameters.
 //
-// https://infisical.com/docs/api-reference/endpoints/secrets/read
-func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsRetrieveSecrets) (result SecretsData, err error) {
-	var token WorkspaceToken
-	var exists bool
-	if token, exists = c.workspaceTokens[workspaceID]; !exists {
-		return SecretsData{}, fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
-	}
-
+// https://infisical.com/docs/api-reference/endpoints/secrets/list
+func (c *Client) ListSecrets(params ParamsListSecrets) (result SecretsData, err error) {
 	if params == nil {
-		params = NewParamsRetrieveSecrets()
-	}
-
-	// set essential params
-	params["workspaceId"] = workspaceID
-	params["environment"] = environment
-
-	var path string
-	if token.E2EE {
-		path = "/v3/secrets/"
-	} else {
-		path = "/v3/secrets/raw/"
+		params = NewParamsListSecrets()
 	}
 
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", path, AuthMethodNormal, &token, params)
+	req, err = c.newRequestWithQueryParams("GET", "/v3/secrets/raw", AuthMethodNormal, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -41,51 +84,45 @@ func (c *Client) RetrieveSecrets(workspaceID, environment string, params ParamsR
 			c.dumpResponse(res)
 
 			if err = c.parseResponse(res, &result); err == nil {
-				if token.E2EE {
-					// decrypt it
-					var secrets []Secret
-					if secrets, err = c.decryptSecrets(token, result.Secrets); err != nil {
-						return SecretsData{}, fmt.Errorf("failed to decrypt retrieved secrets: %s", err)
-					}
-					return SecretsData{Secrets: secrets}, nil
-				} else {
-					// return as it is
-					return result, nil
-				}
+				return result, nil
 			}
 		}
 	}
 
-	return SecretsData{}, fmt.Errorf("failed to retrieve secrets: %s", err)
+	return SecretsData{}, fmt.Errorf("failed to list secrets: %s", err)
 }
 
-// RetrieveSecretsAtPath retrieves all secrets at given path.
-//
-// Just a helper function for `RetrieveSecrets`.
-//
-// `secretPath` is in form of: "/folder1/folder2/..."
-func (c *Client) RetrieveSecretsAtPath(workspaceID, environment, secretPath string) (secrets []Secret, err error) {
-	params := NewParamsRetrieveSecrets().
-		SetSecretPath(secretPath)
+type ParamsCreateSecret map[string]any
 
-	var retrieved SecretsData
-	if retrieved, err = c.RetrieveSecrets(workspaceID, environment, params); err == nil {
-		return retrieved.Secrets, nil
+func NewParamsCreateSecret() ParamsCreateSecret {
+	return ParamsCreateSecret{
+		"secretPath": "/",
+		"type":       SecretTypeShared,
 	}
+}
 
-	return nil, fmt.Errorf("failed to retrieve secrets at secret path '%s': %s", secretPath, err)
+func (p ParamsCreateSecret) SetSecretComment(secretComment string) ParamsCreateSecret {
+	p["secretComment"] = secretComment
+	return p
+}
+
+func (p ParamsCreateSecret) SetSecretPath(secretPath string) ParamsCreateSecret {
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
+	return p
+}
+
+func (p ParamsCreateSecret) SetType(typ SecretType) ParamsCreateSecret {
+	p["type"] = typ
+	return p
 }
 
 // CreateSecret creates a secret with given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/create
 func (c *Client) CreateSecret(workspaceID, environment, secretKey, secretValue string, params ParamsCreateSecret) (err error) {
-	var token WorkspaceToken
-	var exists bool
-	if token, exists = c.workspaceTokens[workspaceID]; !exists {
-		return fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
-	}
-
 	if params == nil {
 		params = NewParamsCreateSecret()
 	}
@@ -95,51 +132,8 @@ func (c *Client) CreateSecret(workspaceID, environment, secretKey, secretValue s
 	params["environment"] = environment
 	params["secretValue"] = secretValue
 
-	var path string
-	if token.E2EE {
-		path = "/v3/secrets/%s"
-
-		var projectKey []byte
-		if projectKey, err = c.projectKey(token); err != nil {
-			return err
-		}
-
-		// encrypt things
-		var encrypted, nonce, authTag []byte
-		// (key)
-		if encrypted, nonce, authTag, err = encrypt(projectKey, []byte(secretKey)); err != nil {
-			return err
-		}
-		params["secretKeyCiphertext"] = encodeBase64(encrypted)
-		params["secretKeyIV"] = encodeBase64(nonce)
-		params["secretKeyTag"] = encodeBase64(authTag)
-		delete(params, "secretKey")
-		// (value)
-		if encrypted, nonce, authTag, err = encrypt(projectKey, []byte(secretValue)); err != nil {
-			return err
-		}
-		params["secretValueCiphertext"] = encodeBase64(encrypted)
-		params["secretValueIV"] = encodeBase64(nonce)
-		params["secretValueTag"] = encodeBase64(authTag)
-		delete(params, "secretValue")
-		// (comment)
-		if comment, exists := params["secretComment"]; exists {
-			if comment, ok := comment.(string); ok {
-				if encrypted, nonce, authTag, err = encrypt(projectKey, []byte(comment)); err != nil {
-					return err
-				}
-				params["secretCommentCiphertext"] = encodeBase64(encrypted)
-				params["secretCommentIV"] = encodeBase64(nonce)
-				params["secretCommentTag"] = encodeBase64(authTag)
-			}
-		}
-		delete(params, "secretComment")
-	} else {
-		path = "/v3/secrets/raw/%s"
-	}
-
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
+	req, err = c.newRequestWithJSONBody("POST", fmt.Sprintf("/v3/secrets/raw/%s", secretKey), AuthMethodNormal, params)
 	if err != nil {
 		return err
 	}
@@ -156,16 +150,37 @@ func (c *Client) CreateSecret(workspaceID, environment, secretKey, secretValue s
 	return err
 }
 
+type ParamsRetrieveSecret map[string]any
+
+func NewParamsRetrieveSecret() ParamsRetrieveSecret {
+	return ParamsRetrieveSecret{
+		"secretPath": "/",
+		"type":       SecretTypePersonal,
+	}
+}
+
+func (p ParamsRetrieveSecret) SetSecretPath(secretPath string) ParamsRetrieveSecret {
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
+	return p
+}
+
+func (p ParamsRetrieveSecret) SetType(typ SecretType) ParamsRetrieveSecret {
+	p["type"] = typ
+	return p
+}
+
+// SecretData struct for secret response
+type SecretData struct {
+	Secret Secret `json:"secret"`
+}
+
 // RetrieveSecret retrieves a secret for given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/read-one
 func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, params ParamsRetrieveSecret) (result SecretData, err error) {
-	var token WorkspaceToken
-	var exists bool
-	if token, exists = c.workspaceTokens[workspaceID]; !exists {
-		return SecretData{}, fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
-	}
-
 	if params == nil {
 		params = NewParamsRetrieveSecret()
 	}
@@ -174,15 +189,8 @@ func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, para
 	params["workspaceId"] = workspaceID
 	params["environment"] = environment
 
-	var path string
-	if token.E2EE {
-		path = "/v3/secrets/%s"
-	} else {
-		path = "/v3/secrets/raw/%s"
-	}
-
 	var req *http.Request
-	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
+	req, err = c.newRequestWithQueryParams("GET", fmt.Sprintf("/v3/secrets/raw/%s", secretKey), AuthMethodNormal, params)
 	if err == nil {
 		c.dumpRequest(req)
 
@@ -191,17 +199,7 @@ func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, para
 			c.dumpResponse(res)
 
 			if err = c.parseResponse(res, &result); err == nil {
-				if token.E2EE {
-					// decrypt it
-					var secret Secret
-					if secret, err = c.decryptSecret(token, result.Secret); err != nil {
-						return SecretData{}, fmt.Errorf("failed to decrypt retrieved secret: %s", err)
-					}
-					return SecretData{Secret: secret}, nil
-				} else {
-					// return as it is
-					return result, nil
-				}
+				return result, nil
 			}
 		}
 	}
@@ -232,16 +230,37 @@ func (c *Client) RetrieveSecretValue(workspaceID, environment string, secretType
 	return "", fmt.Errorf("failed to retrieve secret value for key path '%s': %s", secretKeyWithPath, err)
 }
 
+type ParamsUpdateSecret map[string]any
+
+func NewParamsUpdateSecret() ParamsUpdateSecret {
+	return ParamsUpdateSecret{
+		"secretPath": "/",
+		"type":       SecretTypeShared,
+	}
+}
+
+func (p ParamsUpdateSecret) SetSecretPath(secretPath string) ParamsUpdateSecret {
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
+	return p
+}
+
+func (p ParamsUpdateSecret) SetType(typ SecretType) ParamsUpdateSecret {
+	p["type"] = typ
+	return p
+}
+
+func (p ParamsUpdateSecret) SetSecretComment(comment string) ParamsUpdateSecret {
+	p["secretComment"] = comment
+	return p
+}
+
 // UpdateSecret updates a secret with given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/update
 func (c *Client) UpdateSecret(workspaceID, environment, secretKey, secretValue string, params ParamsUpdateSecret) (err error) {
-	var token WorkspaceToken
-	var exists bool
-	if token, exists = c.workspaceTokens[workspaceID]; !exists {
-		return fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
-	}
-
 	if params == nil {
 		params = NewParamsUpdateSecret()
 	}
@@ -251,45 +270,8 @@ func (c *Client) UpdateSecret(workspaceID, environment, secretKey, secretValue s
 	params["environment"] = environment
 	params["secretValue"] = secretValue
 
-	var path string
-	if token.E2EE {
-		path = "/v3/secrets/%s"
-	} else {
-		path = "/v3/secrets/raw/%s"
-	}
-
-	if token.E2EE {
-		var projectKey []byte
-		if projectKey, err = c.projectKey(token); err != nil {
-			return err
-		}
-
-		// set encrypted values
-		var encrypted, nonce, authTag []byte
-		// (value)
-		if encrypted, nonce, authTag, err = encrypt(projectKey, []byte(secretValue)); err != nil {
-			return err
-		}
-		params["secretValueCiphertext"] = encodeBase64(encrypted)
-		params["secretValueIV"] = encodeBase64(nonce)
-		params["secretValueTag"] = encodeBase64(authTag)
-		delete(params, "secretValue")
-		// (comment)
-		if comment, exists := params["secretComment"]; exists {
-			if comment, ok := comment.(string); ok {
-				if encrypted, nonce, authTag, err = encrypt(projectKey, []byte(comment)); err != nil {
-					return err
-				}
-				params["secretCommentCiphertext"] = encodeBase64(encrypted)
-				params["secretCommentIV"] = encodeBase64(nonce)
-				params["secretCommentTag"] = encodeBase64(authTag)
-			}
-		}
-		delete(params, "secretComment")
-	}
-
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
+	req, err = c.newRequestWithJSONBody("PATCH", fmt.Sprintf("/v3/secrets/raw/%s", secretKey), AuthMethodNormal, params)
 	if err != nil {
 		return err
 	}
@@ -306,16 +288,32 @@ func (c *Client) UpdateSecret(workspaceID, environment, secretKey, secretValue s
 	return err
 }
 
+type ParamsDeleteSecret map[string]any
+
+func NewParamsDeleteSecret() ParamsDeleteSecret {
+	return ParamsDeleteSecret{
+		"secretPath": "/",
+		"type":       SecretTypePersonal,
+	}
+}
+
+func (p ParamsDeleteSecret) SetSecretPath(secretPath string) ParamsDeleteSecret {
+	if secretPath != "/" {
+		secretPath = strings.TrimSuffix(secretPath, "/")
+	}
+	p["secretPath"] = secretPath
+	return p
+}
+
+func (p ParamsDeleteSecret) SetType(typ SecretType) ParamsDeleteSecret {
+	p["type"] = typ
+	return p
+}
+
 // DeleteSecret deletes a secret for given parameters.
 //
 // https://infisical.com/docs/api-reference/endpoints/secrets/delete
 func (c *Client) DeleteSecret(workspaceID, environment, secretKey string, params ParamsDeleteSecret) (err error) {
-	var token WorkspaceToken
-	var exists bool
-	if token, exists = c.workspaceTokens[workspaceID]; !exists {
-		return fmt.Errorf("`token` for given workspace id was not found: %s", workspaceID)
-	}
-
 	if params == nil {
 		params = NewParamsDeleteSecret()
 	}
@@ -324,15 +322,8 @@ func (c *Client) DeleteSecret(workspaceID, environment, secretKey string, params
 	params["workspaceId"] = workspaceID
 	params["environment"] = environment
 
-	var path string
-	if token.E2EE {
-		path = "/v3/secrets/%s"
-	} else {
-		path = "/v3/secrets/raw/%s"
-	}
-
 	var req *http.Request
-	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf(path, secretKey), AuthMethodNormal, &token, params)
+	req, err = c.newRequestWithJSONBody("DELETE", fmt.Sprintf("/v3/secrets/raw/%s", secretKey), AuthMethodNormal, params)
 	if err == nil {
 		c.dumpRequest(req)
 

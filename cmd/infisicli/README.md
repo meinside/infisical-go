@@ -5,6 +5,7 @@ Infisicli, a simple [Infisical](https://infisical.com/) CLI.
 ## Features
 
 - [X] List organizations, workspaces, environments, and secrets.
+- [ ] Create/Update/Delete folders.
 - [X] Create/Update/Delete secrets.
 - [ ] Create/Update/Delete organizations, workspaces, and environments.
 
@@ -23,37 +24,25 @@ Put a `config.json` file in `$XDG_CONFIG_HOME/infisicli/` directory with followi
   // Infisical API Key
   "api_key": "ak.1234567890.abcdefghijk",
 
-  // Workspaces
-  "workspaces": {
-    // ID of workspace
-    "012345abcdefg": {
-      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop", // Workspace's Token
-      "e2ee": true, // E2EE setting is enabled or not
-    },
-  },
+  // Infisical Universal Auth id & secret
+  "client_id": "abcd-efgh-ijkl-mnop",
+  "client_secret": "0123456789abcdefghijklmnop",
 }
 ```
 
 where `api_key` is the API key of your Infisical account,
 
-keys in `workspaces` are organization IDs,
+`client_id` is the universal-auth client id,
 
-`token` is the token of each organization,
+and `client_secret` is the universal-auth client secret.
 
-and `e2ee` is whether the workspace's E2EE setting is enabled or not.
-
-
-**NOTE**: When your E2EE setting is off, you can omit the `api_key` value:
+**NOTE**: You can omit the `api_key` value:
 
 ```json
 {
-  // Workspaces
-  "workspaces": {
-    // ID of workspace
-    "012345abcdefg": {
-      "token": "st.xyzwabcd.0987654321.abcdefghijklmnop", // Workspace's Token
-    },
-  },
+  // Infisical Universal Auth id & secret
+  "client_id": "abcd-efgh-ijkl-mnop",
+  "client_secret": "0123456789abcdefghijklmnop",
 }
 ```
 
@@ -90,23 +79,25 @@ List workspaces with <your-org-id> obtained from above:
 ```bash
 $ infisicli -lw -o=<your-org-id>
 
-   workspace id | name
+       org id |    workspace id | workspace name
 ----
-<workspace1-id> | workspace1-name
+<your-org-id> | <workspace1-id> | workspace1-name
       dev | Development (workspace1-dev-env-id)
   staging |     Staging (workspace1-staging-env-id)
      prod |  Production (workspace1-prod-env-id)
 ----
-<workspace2-id> | workspace2-name
+<your-org-id> | <workspace2-id> | workspace2-name
       dev | Development (workspace2-dev-env-id)
   staging |     Staging (workspace2-staging-env-id)
      prod |  Production (workspace2-prod-env-id)
 ...
 ```
 
+<your-org-id> can be omitted, then it will iterate all organizations and list all workspaces in them.
+
 ### List Secrets
 
-Now list secrets at a folder:
+Now list all secrets in a folder:
 
 ```bash
 $ infisicli -las -w=<workspace1-id> -e=dev -f=/folder1/folder2
@@ -117,6 +108,8 @@ $ infisicli -las -w=<workspace1-id> -e=dev -f=/folder1/folder2
 <workspace1-id> | dev | <type2> | /folder1/folder2/<key2>=<value2>
 ...
 ```
+
+Folder can be omitted, then it will iterate all folders and list all secrets in them.
 
 ### Print a Secret Value
 
