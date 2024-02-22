@@ -55,7 +55,7 @@ func (c *Client) newRequestWithQueryParams(method, path string, authMethod AuthM
 	apiKey := c.apiKey
 	var token *UniversalAuthToken
 	if token, err = c.getToken(); err != nil {
-		return nil, fmt.Errorf("failed to fetch token, cannot generated a request: %s", err)
+		return nil, fmt.Errorf("failed to fetch token, cannot generate a request: %s", err)
 	}
 
 	if authMethod&AuthMethodAPIKeyOnly != 0 && emptyString(c.apiKey) {
@@ -107,7 +107,7 @@ func (c *Client) newRequestWithJSONBody(method, path string, authMethod AuthMeth
 	apiKey := c.apiKey
 	var token *UniversalAuthToken
 	if token, err = c.getToken(); err != nil {
-		return nil, fmt.Errorf("failed to fetch token, cannot generated a request: %s", err)
+		return nil, fmt.Errorf("failed to fetch token, cannot generate a request: %s", err)
 	}
 
 	if authMethod&AuthMethodAPIKeyOnly != 0 && emptyString(c.apiKey) {
