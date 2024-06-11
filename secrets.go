@@ -179,7 +179,7 @@ type SecretData struct {
 
 // RetrieveSecret retrieves a secret for given parameters.
 //
-// https://infisical.com/docs/api-reference/endpoints/secrets/read-one
+// https://infisical.com/docs/api-reference/endpoints/secrets/read
 func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, params ParamsRetrieveSecret) (result SecretData, err error) {
 	if params == nil {
 		params = NewParamsRetrieveSecret()
