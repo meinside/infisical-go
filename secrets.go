@@ -337,3 +337,13 @@ func (c *Client) DeleteSecret(workspaceID, environment, secretKey string, params
 
 	return err
 }
+
+/*
+TODO:
+* Secrets
+- [ ] [Bulk Create](https://infisical.com/docs/api-reference/endpoints/secrets/create-many)
+- [ ] [Bulk Update](https://infisical.com/docs/api-reference/endpoints/secrets/update-many)
+- [ ] [Bulk Delete](https://infisical.com/docs/api-reference/endpoints/secrets/delete-many)
+- [ ] [Attach Tags](https://infisical.com/docs/api-reference/endpoints/secrets/attach-tags)
+- [ ] [Detach Tags](https://infisical.com/docs/api-reference/endpoints/secrets/detach-tags)
+*/

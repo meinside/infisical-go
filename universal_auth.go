@@ -88,3 +88,15 @@ func (c *Client) refresh() (result UniversalAuthToken, err error) {
 
 	return UniversalAuthToken{}, fmt.Errorf("failed to refresh access token: %s", err)
 }
+
+/*
+TODO:
+* Universal Auth
+- [ ] [Attach](https://infisical.com/docs/api-reference/endpoints/universal-auth/attach)
+- [ ] [Retrieve](https://infisical.com/docs/api-reference/endpoints/universal-auth/retrieve)
+- [ ] [Update](https://infisical.com/docs/api-reference/endpoints/universal-auth/update)
+- [ ] [Create Client Secret](https://infisical.com/docs/api-reference/endpoints/universal-auth/create-client-secret)
+- [ ] [List Client Secrets](https://infisical.com/docs/api-reference/endpoints/universal-auth/list-client-secrets)
+- [ ] [Revoke Client Secret](https://infisical.com/docs/api-reference/endpoints/universal-auth/revoke-client-secret)
+- [ ] [Revoke Access Token](https://infisical.com/docs/api-reference/endpoints/universal-auth/revoke-access-token)
+*/
