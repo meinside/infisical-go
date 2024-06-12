@@ -4,7 +4,7 @@ Infisicli, a simple [Infisical](https://infisical.com/) CLI.
 
 ## Features
 
-- [X] List organizations, workspaces, environments, and secrets.
+- [X] List workspaces, environments, and secrets.
 - [ ] Create/Update/Delete folders.
 - [X] Create/Update/Delete secrets.
 - [ ] Create/Update/Delete organizations, workspaces, and environments.
@@ -46,7 +46,7 @@ and `client_secret` is the universal-auth client secret.
 }
 ```
 
-but in this case some features that require `api_key` (eg. listing organizations, listing workspaces, …) will not function.
+but in this case some features that require `api_key` (eg. listing workspaces, …) will not function.
 
 ## Usage
 
@@ -60,21 +60,9 @@ $ infisicli --help
 
 With the valid configuration, you can do following tasks:
 
-### List Organizations
-
-List organizations info with:
-
-```bash
-$ infisicli -lo
-
-           id | name
-----
-<your-org-id> | your-org-name
-```
-
 ### List Workspaces
 
-List workspaces with <your-org-id> obtained from above:
+List workspaces with <your-org-id> obtained from the Infisical console URL:
 
 ```bash
 $ infisicli -lw -o=<your-org-id>
@@ -92,8 +80,6 @@ $ infisicli -lw -o=<your-org-id>
      prod |  Production (workspace2-prod-env-id)
 ...
 ```
-
-<your-org-id> can be omitted, then it will iterate all organizations and list all workspaces in them.
 
 ### List Secrets
 

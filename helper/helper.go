@@ -1,5 +1,9 @@
 package helper
 
+// helper functions
+//
+// especially for retrieving secret values
+
 import (
 	"errors"
 

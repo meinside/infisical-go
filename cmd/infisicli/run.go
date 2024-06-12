@@ -22,24 +22,22 @@ const (
 
 const (
 	// arguments for commands
-	cmdHelpShort              = "-h"
-	cmdHelpLong               = "--help"
-	cmdListOrganizationsShort = "-lo"
-	cmdListOrganizationsLong  = "--list-organizations"
-	cmdListWorkspacesShort    = "-lw"
-	cmdListWorkspacesLong     = "--list-workspaces"
-	cmdListAllSecretsShort    = "-las"
-	cmdListAllSecretsLong     = "--list-all-secrets"
-	cmdPrintValueShort        = "-p"
-	cmdPrintValueLong         = "--print"
-	cmdNewValueShort          = "-n"
-	cmdNewValueLong           = "--new-value"
-	cmdUpdateValueShort       = "-u"
-	cmdUpdateValueLong        = "--update-value"
-	cmdDeleteValueShort       = "-d"
-	cmdDeleteValueLong        = "--delete-value"
-	cmdVersionShort           = "-v"
-	cmdVersionLong            = "--version"
+	cmdHelpShort           = "-h"
+	cmdHelpLong            = "--help"
+	cmdListWorkspacesShort = "-lw"
+	cmdListWorkspacesLong  = "--list-workspaces"
+	cmdListAllSecretsShort = "-las"
+	cmdListAllSecretsLong  = "--list-all-secrets"
+	cmdPrintValueShort     = "-p"
+	cmdPrintValueLong      = "--print"
+	cmdNewValueShort       = "-n"
+	cmdNewValueLong        = "--new-value"
+	cmdUpdateValueShort    = "-u"
+	cmdUpdateValueLong     = "--update-value"
+	cmdDeleteValueShort    = "-d"
+	cmdDeleteValueLong     = "--delete-value"
+	cmdVersionShort        = "-v"
+	cmdVersionLong         = "--version"
 
 	// arguments for command parameters
 	argOrganizationShort = "-o"
@@ -147,63 +145,57 @@ Usage:
 
   %[1]s %[2]s
   %[1]s %[3]s
-  : print this help message to stdout.
+  : Print this help message to stdout.
 
   %[1]s %[4]s
   %[1]s %[5]s
-  : print the version string to stdout.
+  : Print the version string to stdout.
 
   %[1]s %[6]s
   %[1]s %[7]s
-  : list all your organizations to stdout. ('api_key' needed)
+  : List all your workspaces with given org id to stdout.
+  > NOTE: Your org id can be retrieved from infisical console URL.
+    eg. %[1]s %[6]s %[18]s=0a1b2c3d4e5f
+    eg. %[1]s %[7]s %[19]s=0a1b2c3d4e5f
 
   %[1]s %[8]s
   %[1]s %[9]s
-  : list all your workspaces(iterating all org ids) to stdout. ('api_key' needed)
-    eg. %[1]s %[8]s
-    eg. %[1]s %[9]s
-  : list all your workspaces with given org id to stdout. ('api_key' needed)
-    eg. %[1]s %[8]s %[20]s=0a1b2c3d4e5f
-    eg. %[1]s %[9]s %[21]s=0a1b2c3d4e5f
+  : List all secret values to stdout.
+    eg. %[1]s %[8]s %[22]s=012345abcdefg %[24]s=dev
+    eg. %[1]s %[9]s %[23]s=012345abcdefg %[25]s=dev
+    eg. %[1]s %[8]s %[22]s=012345abcdefg %[24]s=dev %[20]s=/folder1/folder2
+    eg. %[1]s %[9]s %[23]s=012345abcdefg %[25]s=dev %[21]s=/folder1/folder2
 
   %[1]s %[10]s
   %[1]s %[11]s
-  : list all secret values to stdout.
-    eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev
-    eg. %[1]s %[11]s %[25]s=012345abcdefg %[27]s=dev
-    eg. %[1]s %[10]s %[24]s=012345abcdefg %[26]s=dev %[22]s=/folder1/folder2
-    eg. %[1]s %[11]s %[25]s=012345abcdefg %[27]s=dev %[23]s=/folder1/folder2
+  : Print the secret value to stdout without a trailing newline.
+    eg. %[1]s %[10]s %[22]s=012345abcdefg %[24]s=dev %[26]s=shared %[28]s=/folder/SECRET_KEY_1
+    eg. %[1]s %[11]s %[23]s=012345abcdefg %[25]s=dev %[27]s=shared %[29]s=/folder/SECRET_KEY_1
 
   %[1]s %[12]s
   %[1]s %[13]s
-  : print the secret value to stdout without a trailing newline.
-    eg. %[1]s %[12]s %[24]s=012345abcdefg %[26]s=dev %[28]s=shared %[30]s=/folder/SECRET_KEY_1
-    eg. %[1]s %[13]s %[25]s=012345abcdefg %[27]s=dev %[29]s=shared %[31]s=/folder/SECRET_KEY_1
+  : Create a new secret with given parameters.
+    eg. %[1]s %[12]s %[22]s=012345abcdefg %[24]s=dev %[26]s=shared %[28]s=/folder/NEW_KEY %[30]s=NEW_VALUE
+    eg. %[1]s %[13]s %[23]s=012345abcdefg %[25]s=dev %[27]s=shared %[29]s=/folder/NEW_KEY %[31]s=NEW_VALUE
+    eg. %[1]s %[12]s %[22]s=012345abcdefg %[24]s=dev %[26]s=shared %[28]s=/folder/NEW_KEY %[30]s=NEW_VALUE %[32]s=COMMENT
+    eg. %[1]s %[13]s %[23]s=012345abcdefg %[25]s=dev %[27]s=shared %[29]s=/folder/NEW_KEY %[31]s=NEW_VALUE %[33]s=COMMENT
 
   %[1]s %[14]s
   %[1]s %[15]s
-  : create a new secret with given parameters.
-    eg. %[1]s %[14]s %[24]s=012345abcdefg %[26]s=dev %[28]s=shared %[30]s=/folder/NEW_KEY %[32]s=NEW_VALUE
-    eg. %[1]s %[15]s %[25]s=012345abcdefg %[27]s=dev %[29]s=shared %[31]s=/folder/NEW_KEY %[33]s=NEW_VALUE
-    eg. %[1]s %[14]s %[24]s=012345abcdefg %[26]s=dev %[28]s=shared %[30]s=/folder/NEW_KEY %[32]s=NEW_VALUE %[34]s=COMMENT
-    eg. %[1]s %[15]s %[25]s=012345abcdefg %[27]s=dev %[29]s=shared %[31]s=/folder/NEW_KEY %[33]s=NEW_VALUE %[35]s=COMMENT
+  : Update the value of a secret at the given key-path.
+    eg. %[1]s %[14]s %[22]s=012345abcdefg %[24]s=dev %[26]s=shared %[28]s=/folder/SOME_KEY %[30]s=UPDATED_VALUE
+    eg. %[1]s %[15]s %[23]s=012345abcdefg %[25]s=dev %[27]s=shared %[29]s=/folder/SOME_KEY %[31]s=UPDATED_VALUE
 
   %[1]s %[16]s
   %[1]s %[17]s
-  : update the value of a secret at a given key-path.
-    eg. %[1]s %[16]s %[24]s=012345abcdefg %[26]s=dev %[28]s=shared %[30]s=/folder/SOME_KEY %[32]s=UPDATED_VALUE
-    eg. %[1]s %[17]s %[25]s=012345abcdefg %[27]s=dev %[29]s=shared %[31]s=/folder/SOME_KEY %[33]s=UPDATED_VALUE
-
-  %[1]s %[18]s
-  %[1]s %[19]s
-  : delete a secret at a given key-path.
-    eg. %[1]s %[18]s %[24]s=012345abcdefg %[26]s=dev %[28]s=shared %[30]s=/folder/SOME_KEY
-    eg. %[1]s %[19]s %[25]s=012345abcdefg %[27]s=dev %[29]s=shared %[31]s=/folder/SOME_KEY
+  : Delete a secret at the given key-path.
+    eg. %[1]s %[16]s %[22]s=012345abcdefg %[24]s=dev %[26]s=shared %[28]s=/folder/SOME_KEY
+    eg. %[1]s %[17]s %[23]s=012345abcdefg %[25]s=dev %[27]s=shared %[29]s=/folder/SOME_KEY
 
 Other optional arguments:
 
-  %[36]s / %[37]s
-  : dump http requests/responses for debugging.
+  %[34]s / %[35]s
+  : Dump http requests/responses for debugging.
 `,
 		// executable name
 		applicationName,
@@ -211,7 +203,6 @@ Other optional arguments:
 		// commands
 		cmdHelpShort, cmdHelpLong,
 		cmdVersionShort, cmdVersionLong,
-		cmdListOrganizationsShort, cmdListOrganizationsLong,
 		cmdListWorkspacesShort, cmdListWorkspacesLong,
 		cmdListAllSecretsShort, cmdListAllSecretsLong,
 		cmdPrintValueShort, cmdPrintValueLong,
@@ -282,9 +273,7 @@ func run(args []string) {
 		// do nothing
 	} else {
 		//handle commands here
-		if hasArg(args, cmdListOrganizationsShort, cmdListOrganizationsLong) {
-			err = doListOrganizations(verbose)
-		} else if hasArg(args, cmdListWorkspacesShort, cmdListWorkspacesLong) {
+		if hasArg(args, cmdListWorkspacesShort, cmdListWorkspacesLong) {
 			err = doListWorkspaces(args, verbose)
 		} else if hasArg(args, cmdListAllSecretsShort, cmdListAllSecretsLong) {
 			err = doListAllSecrets(args, verbose)
@@ -336,40 +325,6 @@ func do(fn func(c *infisical.Client) error, verbose bool) error {
 	return err
 }
 
-// list organizations, will os.Exit(0) on success
-func doListOrganizations(verbose bool) error {
-	return do(func(c *infisical.Client) error {
-		result, err := c.RetrieveOrganizations()
-		if err == nil {
-			if len(result.Organizations) > 0 {
-				// calculate max lengths for formatting
-				maxLenOrg := maxLength(result.Organizations, func(org infisical.Organization) int {
-					return len(org.Name)
-				})
-				maxLenID := maxLength(result.Organizations, func(org infisical.Organization) int {
-					return len(org.ID)
-				})
-				format := fmt.Sprintf("%%%ds | %%-%ds\n", maxLenID, maxLenOrg)
-
-				// print headers
-				fmt.Printf(format, "org id", "name")
-				fmt.Printf("----\n")
-
-				// print organizations
-				for _, org := range result.Organizations {
-					fmt.Printf(format, org.ID, org.Name)
-				}
-			} else {
-				fmt.Printf("* There was no organization for current configuration.\n")
-			}
-
-			os.Exit(0)
-		}
-
-		return err
-	}, verbose)
-}
-
 // list workspaces, will os.Exit(0) on success
 func doListWorkspaces(args []string, verbose bool) error {
 	return do(func(c *infisical.Client) error {
@@ -380,13 +335,7 @@ func doListWorkspaces(args []string, verbose bool) error {
 		if org, _ := valueFromKVs(argOrganizationShort, argOrganizationLong, params); org != "" {
 			orgs = append(orgs, org)
 		} else {
-			// if org id is not given, iterate all
-			var result infisical.OrganizationsData
-			if result, err = c.RetrieveOrganizations(); err == nil {
-				for _, org := range result.Organizations {
-					orgs = append(orgs, org.ID)
-				}
-			}
+			err = fmt.Errorf("organization id (`%s` or `%s`) is not provided", argOrganizationShort, argOrganizationLong)
 		}
 
 		if err == nil {

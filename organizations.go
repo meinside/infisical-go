@@ -44,6 +44,15 @@ type Organization struct {
 	UpdatedAt    string `json:"updatedAt"`
 }
 
+/*
+TODO:
+* Organizations
+- [ ] [Get User Memberships](https://infisical.com/docs/api-reference/endpoints/organizations/memberships)
+- [ ] [Update User Membership](https://infisical.com/docs/api-reference/endpoints/organizations/update-membership)
+- [ ] [Delete User Membership](https://infisical.com/docs/api-reference/endpoints/organizations/delete-membership)
+- [ ] [List Identity Memberships](https://infisical.com/docs/api-reference/endpoints/organizations/list-identity-memberships)
+*/
+
 // RetrieveProjects retrieves all workspaces for given organization id.
 //
 // https://infisical.com/docs/api-reference/endpoints/organizations/workspaces

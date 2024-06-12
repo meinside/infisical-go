@@ -179,7 +179,7 @@ type SecretData struct {
 
 // RetrieveSecret retrieves a secret for given parameters.
 //
-// https://infisical.com/docs/api-reference/endpoints/secrets/read-one
+// https://infisical.com/docs/api-reference/endpoints/secrets/read
 func (c *Client) RetrieveSecret(workspaceID, environment, secretKey string, params ParamsRetrieveSecret) (result SecretData, err error) {
 	if params == nil {
 		params = NewParamsRetrieveSecret()
@@ -337,3 +337,13 @@ func (c *Client) DeleteSecret(workspaceID, environment, secretKey string, params
 
 	return err
 }
+
+/*
+TODO:
+* Secrets
+- [ ] [Bulk Create](https://infisical.com/docs/api-reference/endpoints/secrets/create-many)
+- [ ] [Bulk Update](https://infisical.com/docs/api-reference/endpoints/secrets/update-many)
+- [ ] [Bulk Delete](https://infisical.com/docs/api-reference/endpoints/secrets/delete-many)
+- [ ] [Attach Tags](https://infisical.com/docs/api-reference/endpoints/secrets/attach-tags)
+- [ ] [Detach Tags](https://infisical.com/docs/api-reference/endpoints/secrets/detach-tags)
+*/
