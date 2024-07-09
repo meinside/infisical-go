@@ -1,5 +1,7 @@
 # infisical-go
 
+**(ARCHIVED) NOTE:** Use [official SDK](https://github.com/infisical/go-sdk) instead.
+
 [Infisical](https://infisical.com/) client library for golang.
 
 ## Usage
